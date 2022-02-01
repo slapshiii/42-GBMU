@@ -91,7 +91,6 @@ typedef void (*IN_PROC)(Cpu *c);
 IN_PROC instGetProcessor(in_type type);
 
 class Gbmu;
-extern Gbmu gbmu;
 class Cpu
 {
 
@@ -137,8 +136,8 @@ public:
 	void execute();
 
 	uint16_t readReg(reg_type reg);
-	void setReg(reg_type reg, uint8_t value);
-	void setFlags(char z, char n, char h, char c):
+	void setReg(reg_type reg, uint16_t value);
+	void setFlags(char z, char n, char h, char c);
 	
 };
 

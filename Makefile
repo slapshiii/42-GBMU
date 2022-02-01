@@ -6,7 +6,7 @@
 #    By: phnguyen <phnguyen@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/12/14 01:20:15 by phnguyen          #+#    #+#              #
-#    Updated: 2022/02/01 14:38:02 by phnguyen         ###   ########.fr        #
+#    Updated: 2022/02/01 22:05:53 by phnguyen         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -26,8 +26,7 @@ INCL = includes/
 C_FILE =	main \
 			Gbmu \
 			Rom \
-			Cpu \
-			Cpu_instruc
+			Cpu Cpu_instruc Cpu_fetch
 
 SRC = $(addprefix $(SRCDIR), $(addsuffix .cpp, $(C_FILE)))
 OBJ = $(addprefix $(OBJDIR), $(addsuffix .o, $(C_FILE)))

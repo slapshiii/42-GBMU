@@ -82,3 +82,27 @@ uint16_t Cpu::readReg(reg_type reg) {
 	default:	return 0;
 	}
 }
+
+void Cpu::setReg(reg_type reg, uint16_t value) {
+	switch (reg)
+	{
+	case RT_A: Cpu::regs.a = value & 0xFF; break;
+	case RT_F: Cpu::regs.f = value & 0xFF; break;
+	case RT_B: Cpu::regs.b = value & 0xFF; break;
+	case RT_C: Cpu::regs.c = value & 0xFF; break;
+	case RT_D: Cpu::regs.d = value & 0xFF; break;
+	case RT_E: Cpu::regs.e = value & 0xFF; break;
+	case RT_H: Cpu::regs.h = value & 0xFF; break;
+	case RT_L: Cpu::regs.l = value & 0xFF; break;
+
+	case RT_AF: *((uint16_t *)&Cpu::regs.a) = reverse(value); break;
+	case RT_BC: *((uint16_t *)&Cpu::regs.b) = reverse(value); break;
+	case RT_DE: *((uint16_t *)&Cpu::regs.d) = reverse(value); break;
+	case RT_HL: *((uint16_t *)&Cpu::regs.h) = reverse(value); break;
+	
+	case RT_PC: Cpu::regs.pc = value; break;
+	case RT_SP: Cpu::regs.sp = value; break;
+	case RT_NONE:
+	default:	return;
+	}
+}
