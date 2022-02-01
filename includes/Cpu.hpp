@@ -1,151 +1,145 @@
 #ifndef _CPU_HPP
 #define _CPU_HPP
 
-#include "Gmbu.hpp"
-
 #include <vector>
 
-#define	HICODE(x) ((x & 0b00111000) >> 3)
-#define	LOCODE(x) ((x & 0b00000111) >> 0)
+#include "utils.hpp"
+
+#define CPU_FLAG_Z BIT(Cpu::regs.f, 7)
+#define CPU_FLAG_C BIT(Cpu::regs.f, 4)
+
+class Cpu;
+
+typedef enum {
+	IN_NONE,
+	IN_NOP,
+	IN_LD,
+	IN_INC,
+	IN_DEC,
+	IN_RLCA,
+	IN_ADD,
+	IN_RRCA,
+	IN_STOP,
+	IN_RLA,
+	IN_JR,
+	IN_RRA,
+	IN_DAA,
+	IN_CPL,
+	IN_SCF,
+	IN_CCF,
+	IN_HALT,
+	IN_ADC,
+	IN_SUB,
+	IN_SBC,
+	IN_AND,
+	IN_XOR,
+	IN_OR,
+	IN_CP,
+	IN_POP,
+	IN_JP,
+	IN_PUSH,
+	IN_RET,
+	IN_CB,
+	IN_CALL,
+	IN_RETI,
+	IN_LDH,
+	IN_JPHL,
+	IN_DI,
+	IN_EI,
+	IN_RST,
+	IN_ERR,
+	IN_RLC,
+	IN_RRC,
+	IN_RL,
+	IN_RR,
+	IN_SLA,
+	IN_SRA,
+	IN_SWAP,
+	IN_SRL,
+	IN_BIT,
+	IN_RES,
+	IN_SET
+}	in_type;
+
+typedef enum {
+	AM_IMP,
+	AM_R_D16, AM_R_R, AM_MR_R, AM_R, AM_R_D8, AM_R_MR,
+	AM_R_HLI, AM_R_HLD, AM_HLI_R, AM_HLD_R, AM_R_A8, AM_A8_R, AM_HL_SPR,
+	AM_D16, AM_D8, AM_D16_R, AM_MR_D8, AM_MR, AM_A16_R, AM_R_A16
+}	addr_mode;
+
+typedef enum {
+	RT_NONE,
+	RT_A, RT_F, RT_B, RT_C, RT_D, RT_E, RT_H, RT_L,
+	RT_AF, RT_BC, RT_DE, RT_HL, RT_SP, RT_PC
+}	reg_type;
+
+typedef enum {
+	CT_NONE, CT_NZ, CT_Z, CT_NC, CT_C
+}	cond_type;
+
+typedef struct {
+	in_type		type;
+	addr_mode	mode;
+	reg_type	reg1;
+	reg_type	reg2;
+	cond_type	cond;
+	uint8_t		param;
+}	instruction;
+
+typedef void (*IN_PROC)(Cpu *c);
+IN_PROC instGetProcessor(in_type type);
 
 class Gbmu;
-
+extern Gbmu gbmu;
 class Cpu
 {
-private:
-	Gbmu	*_gbmu = nullptr;
+
 public:
-	enum FLAGS
+	typedef struct
 	{
-		CY = (1 << 4),
-		H = (1 << 5),
-		N = (1 << 6),
-		Z = (1 << 7)
-	};
-	uint8_t	A = 0x00;
-	uint8_t	B = 0x00;
-	uint8_t	C = 0x00;
-	uint8_t	D = 0x00;
-	uint8_t	E = 0x00;
-	union F_REG
-	{
-		struct
-		{
-			uint8_t unused: 4;
-			uint8_t CY: 4;
-			uint8_t H: 4;
-			uint8_t N: 4;
-			uint8_t Z: 4;
-		};
-		
-		uint8_t	F = 0x00;
-	} flag;
+		uint8_t		a;
+		uint8_t		f;
+		uint8_t		b;
+		uint8_t		c;
+		uint8_t		d;
+		uint8_t		e;
+		uint8_t		h;
+		uint8_t		l;
+		uint16_t	pc;
+		uint16_t	sp;
+	}	cpuRegs;
 	
-	
-	uint8_t		H = 0x00;
-	uint8_t		L = 0x00;
-	uint16_t	PC = 0x0000;
-	uint16_t	SP = 0x0000;
+	static cpuRegs	regs;
+	uint16_t		_fetchData;
+	uint16_t		_memDest;
+	uint8_t			_opcode;
+	uint8_t			_cycle;
+	instruction*	_cur_inst;
+	bool			_stepping;
+	bool			_halted;
+	bool			_destIsMem;
+	bool			_masterInt;
 
-	uint8_t		fetched_8bit = 0x00;
-	uint16_t	fetched_16bit = 0x0000;
+	instruction *instrucByOpcode(uint8_t byte);
 
-	uint16_t	addr_abs = 0x0000;
-	uint8_t		opcode = 0x00;
-	uint8_t		cycles = 0;
-
-	struct INST
-	{
-		std::string name;
-		uint8_t(Cpu::*operate)(void) = nullptr;
-		uint8_t(Cpu::*srcmode)(void) = nullptr;
-		uint8_t	cycles = 0;
-	};
-	std::vector<INST> lookup;
+	void	(*writeBus)(uint16_t addr, uint8_t value);
+	uint8_t	(*readBus)(uint16_t addr);
 
 public:
 	Cpu(/* args */);
 	~Cpu();
 
-	uint8_t		fetch();
+	bool step();
 
-	void clock();
-	void reset();
-	void irq();
+	void fetch_instruction();
+	void fetch_data();
+	void execute();
 
-	void connectGbmu(Gbmu *g) { _gbmu = g; }
-
-private:
-	void write(uint16_t addr, uint8_t data);
-	uint8_t read(uint16_t addr);
-
-private:
-	uint8_t	IMP();
-	uint8_t	IMM();
-	uint8_t	IND();
-	uint8_t	HLR();
-	uint8_t	BCR();
-	uint8_t	DER();
-	uint8_t	CR();
-	uint8_t	IDW();
-
-	uint8_t	LDr();
-	uint8_t	LDHL();
-	uint8_t	LDA();
-	uint8_t	LDs();
-	uint8_t LDH();
-	uint8_t	LDW();
-	uint8_t	LDI();
-	uint8_t	LDD();
-	uint8_t	LDC();
-	uint8_t	LDE();
-	uint8_t LHI();
-	uint8_t LHD();
-
-	uint8_t	PUSH();
-	uint8_t	POP();
-	uint8_t	LDHL();
-	uint8_t	ADD();
-	uint8_t	ADC();
-	uint8_t	SUB();
-	uint8_t	SBC();
-	uint8_t	AND();
-	uint8_t	OR();
-	uint8_t	XOR();
-	uint8_t	CP();
-	uint8_t	INC();
-	uint8_t	DEC();
-
-	uint8_t	RLCA();
-	uint8_t	RLA();
-	uint8_t	RRCA();
-	uint8_t	RRA();
-	uint8_t	RLC();
-	uint8_t	RL();
-	uint8_t	RRC();
-	uint8_t	RR();
-	uint8_t	SLA();
-	uint8_t	SRA();
-	uint8_t	SRL();
-	uint8_t	SWAP();
-
-	uint8_t	BIT();
-	uint8_t	SET();
-	uint8_t	RES();
-
-	uint8_t	JP();
-	uint8_t	JR();
-	uint8_t	CALL();
-	uint8_t	RET();
-	uint8_t	RETI();
-	uint8_t	RST();
-
-	uint8_t	DAA();
-	uint8_t	CPL();
-	uint8_t	NOP();
-
-	uint8_t	HALT();
-	uint8_t	STOP();
+	uint16_t readReg(reg_type reg);
+	void setReg(reg_type reg, uint8_t value);
+	void setFlags(char z, char n, char h, char c):
+	
 };
 
 #endif

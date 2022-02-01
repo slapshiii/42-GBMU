@@ -1,121 +1,84 @@
 #include "Cpu.hpp"
+#include "Gmbu.hpp"
 
-Cpu::Cpu(/* args */)
-{
-	using c = Cpu;
-	lookup =
-	{	/*			x0								x1								x2								x3								x4								x5								x6								x7								x8								x9								xA								xB								xC								xD								xE								xF				*/
-/*0x*/	{ "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "LD" , &c::LDC, &c::IMP, 2 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "LD" , &c::LDr, &c::IMM, 2 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "LD" , &c::LDA, &c::BCR, 2 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "LD" , &c::LDr, &c::IMM, 2 }, { "NOP", &c::NOP, &c::IMP, 4 },
-/*1x*/	{ "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "LD" , &c::LDE, &c::IMP, 2 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "LD" , &c::LDr, &c::IMM, 2 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "LD" , &c::LDA, &c::DER, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "LD" , &c::LDr, &c::IMM, 2 }, { "NOP", &c::NOP, &c::IMP, 4 },
-/*2x*/	{ "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "LD" , &c::LHI, &c::IMP, 2 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "LD" , &c::LDr, &c::IMM, 2 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "LD" , &c::LDI, &c::HLR, 2 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "LD" , &c::LDr, &c::IMM, 2 }, { "NOP", &c::NOP, &c::IMP, 4 },
-/*3x*/	{ "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "LD" , &c::LHD, &c::IMP, 2 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "LD", &c::LDHL, &c::IMM, 3 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "LD" , &c::LDD, &c::HLR, 2 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "LD" , &c::LDr, &c::IMM, 2 }, { "NOP", &c::NOP, &c::IMP, 4 },
-/*4x*/	{ "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::HLR, 2 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::HLR, 2 }, { "LD" , &c::LDr, &c::IMP, 1 },
-/*5x*/	{ "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::HLR, 2 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::HLR, 2 }, { "LD" , &c::LDr, &c::IMP, 1 },
-/*6x*/	{ "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::HLR, 2 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::HLR, 2 }, { "LD" , &c::LDr, &c::IMP, 1 },
-/*7x*/	{ "LD", &c::LDHL, &c::IMP, 2 }, { "LD", &c::LDHL, &c::IMP, 2 }, { "LD", &c::LDHL, &c::IMP, 2 }, { "LD", &c::LDHL, &c::IMP, 2 }, { "LD", &c::LDHL, &c::IMP, 2 }, { "LD", &c::LDHL, &c::IMP, 2 }, {"HALT", &c::HALT, &c::IMP, 1}, { "LD", &c::LDHL, &c::IMP, 2 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::IMP, 1 }, { "LD" , &c::LDr, &c::HLR, 2 }, { "LD" , &c::LDr, &c::IMP, 1 },
-/*8x*/	{ "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 },
-/*9x*/	{ "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 },
-/*Ax*/	{ "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 },
-/*Bx*/	{ "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 },
-/*Cx*/	{ "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 },
-/*Dx*/	{ "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 },
-/*Ex*/	{ "LDH", &c::LDH, &c::IND, 3 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "LD" , &c::LDs, &c::IMP, 2 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "LD ", &c::LDW, &c::IDW, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 },
-/*Fx*/	{ "LDH", &c::LDA, &c::IND, 3 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "LD" , &c::LDA, &c::CR , 2 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "LD ", &c::LDA, &c::IDW, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }, { "NOP", &c::NOP, &c::IMP, 4 }
-	};
+extern Gbmu gbmu;
+
+instruction instructions[0x100] = {
+	[0x00] = {IN_NOP, AM_IMP, RT_NONE, RT_NONE, CT_NONE, 0},
+
+	[0x05] = {IN_DEC, AM_R, RT_B, RT_NONE, CT_NONE, 0},
+
+	[0x0E] = {IN_LD, AM_R_D8, RT_C, RT_NONE, CT_NONE, 0},
+	
+	//[0x31] = {IN_XOR, AM_R, RT_A, RT_NONE, CT_NONE, 0},
+	[0xAF] = {IN_XOR, AM_R, RT_A, RT_NONE, CT_NONE, 0},
+
+	[0xC3] = {IN_JP, AM_D16, RT_NONE, RT_NONE, CT_NONE, 0},
+	[0xF3] = {IN_DI, AM_IMP, RT_NONE, RT_NONE, CT_NONE, 0},
+};
+
+Cpu::Cpu() {
+	Cpu::regs.pc = 0x100;
+	Cpu::regs.a = 0x01;
+}
+Cpu::~Cpu() {}
+
+instruction *Cpu::instrucByOpcode(uint8_t byte) {
+	return (&instructions[byte]);
 }
 
-Cpu::~Cpu()
-{
+void Cpu::fetch_instruction() {
+	this->_opcode = gbmu.read(Cpu::regs.pc++);
+	this->_cur_inst = instrucByOpcode(this->_opcode);
 }
 
-void Cpu::write(uint16_t addr, uint8_t data)
-{
-	_gbmu->write(addr, data);
+void Cpu::execute() {
+	IN_PROC proc = instGetProcessor(this->_cur_inst->type);
+	if (proc)
+		proc(this);
 }
 
-uint8_t Cpu::read(uint16_t addr)
-{
-	return (_gbmu->read(addr, false));
-}
+bool Cpu::step(){
+	if (!this->_halted) {
+		uint16_t PC = Cpu::regs.pc;
+		this->fetch_instruction();
+		this->fetch_data();
 
-void	Cpu::clock()
-{
-	uint8_t fetchCycle, operateCycle;
-	if (cycles == 0)
-	{
-		opcode = read(PC);
-		++PC;
+		printf("%04X: (%02X %02X %02X)\n",
+			PC, this->_opcode,
+			gbmu.read(PC + 1), gbmu.read(PC + 2)
+		);
 
-		cycles = lookup[opcode].cycles;
-		fetchCycle = (this->*lookup[opcode].srcmode)();
-		operateCycle = (this->*lookup[opcode].operate)();
-		cycles += (fetchCycle & operateCycle);
+		this->execute();
 	}
+
+	return (true);
 }
 
-uint8_t	Cpu::IMP(){
-	switch (LOCODE(opcode))
+uint16_t reverse(uint16_t n) {
+	return ((n & 0xFF00) >> 8) | ((n & 0x00FF) << 8);
+}
+
+uint16_t Cpu::readReg(reg_type reg) {
+	switch (reg)
 	{
-	case 0b111:
-		fetched_8bit = A;
-		break;
-	case 0b000:
-		fetched_8bit = B;
-		break;
-	case 0b001:
-		fetched_8bit = C;
-		break;
-	case 0b010:
-		fetched_8bit = D;
-		break;
-	case 0b011:
-		fetched_8bit = E;
-		break;
-	case 0b100:
-		fetched_8bit = H;
-		break;
-	case 0b101:
-		fetched_8bit = L;
-		break;
-	default:
-		break;
+	case RT_A: return Cpu::regs.a;
+	case RT_F: return Cpu::regs.f;
+	case RT_B: return Cpu::regs.b;
+	case RT_C: return Cpu::regs.c;
+	case RT_D: return Cpu::regs.d;
+	case RT_E: return Cpu::regs.e;
+	case RT_H: return Cpu::regs.h;
+	case RT_L: return Cpu::regs.l;
+
+	case RT_AF: return reverse(*((uint16_t *)&Cpu::regs.a));
+	case RT_BC: return reverse(*((uint16_t *)&Cpu::regs.b));
+	case RT_DE: return reverse(*((uint16_t *)&Cpu::regs.d));
+	case RT_HL: return reverse(*((uint16_t *)&Cpu::regs.h));
+	
+	case RT_PC: return Cpu::regs.pc;
+	case RT_SP: return Cpu::regs.sp;
+
+	default:	return 0;
 	}
-	return (0);
-}
-uint8_t Cpu::IMM(){
-	addr_abs = PC++;
-	fetched_8bit = read(addr_abs);
-	return (0);
-}
-uint8_t Cpu::IND(){
-	addr_abs = PC++;
-	addr_abs = (read(addr_abs) & 0x00FF);
-	fetched_8bit = read(addr_abs);
-	return (0);
-}
-uint8_t Cpu::IDW(){
-	addr_abs = (read(PC++) << 4);
-	addr_abs |= read(PC++);
-	fetched_8bit = read(addr_abs);
-	return (0);
-}
-uint8_t Cpu::HLR(){
-	addr_abs = (H << 4) | L;
-	fetched_8bit = read(addr_abs);
-	return (0);
-}
-uint8_t Cpu::BCR(){
-	addr_abs = (B << 4) | C;
-	fetched_8bit = read(addr_abs);
-	return (0);
-}
-uint8_t Cpu::DER(){
-	addr_abs = (D << 4) | E;
-	fetched_8bit = read(addr_abs);
-	return (0);
-}
-uint8_t Cpu::CR(){
-	addr_abs = (0xFF00 | C);
-	fetched_8bit = read(addr_abs);
-	return (0);
 }
