@@ -6,6 +6,8 @@
 #include "utils.hpp"
 
 #define CPU_FLAG_Z BIT(Cpu::regs.f, 7)
+#define CPU_FLAG_N BIT(Cpu::regs.f, 6)
+#define CPU_FLAG_H BIT(Cpu::regs.f, 5)
 #define CPU_FLAG_C BIT(Cpu::regs.f, 4)
 
 class Cpu;
@@ -80,15 +82,16 @@ typedef enum {
 
 typedef struct {
 	in_type		type;
-	addr_mode	mode;
-	reg_type	reg1;
-	reg_type	reg2;
-	cond_type	cond;
-	uint8_t		param;
+	addr_mode	mode = AM_IMP;
+	reg_type	reg1 = RT_NONE;
+	reg_type	reg2 = RT_NONE;
+	cond_type	cond = CT_NONE;
+	uint8_t		param = 0;
 }	instruction;
 
 typedef void (*IN_PROC)(Cpu *c);
 IN_PROC instGetProcessor(in_type type);
+const char *instName(in_type type);
 
 class Gbmu;
 class Cpu
@@ -119,6 +122,7 @@ public:
 	bool			_halted;
 	bool			_destIsMem;
 	bool			_masterInt;
+	bool			_enablingIme;
 
 	instruction *instrucByOpcode(uint8_t byte);
 

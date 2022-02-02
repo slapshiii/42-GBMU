@@ -3,29 +3,11 @@
 
 extern Gbmu gbmu;
 
-instruction instructions[0x100] = {
-	[0x00] = {IN_NOP, AM_IMP, RT_NONE, RT_NONE, CT_NONE, 0},
-
-	[0x05] = {IN_DEC, AM_R, RT_B, RT_NONE, CT_NONE, 0},
-
-	[0x0E] = {IN_LD, AM_R_D8, RT_C, RT_NONE, CT_NONE, 0},
-	
-	//[0x31] = {IN_XOR, AM_R, RT_A, RT_NONE, CT_NONE, 0},
-	[0xAF] = {IN_XOR, AM_R, RT_A, RT_NONE, CT_NONE, 0},
-
-	[0xC3] = {IN_JP, AM_D16, RT_NONE, RT_NONE, CT_NONE, 0},
-	[0xF3] = {IN_DI, AM_IMP, RT_NONE, RT_NONE, CT_NONE, 0},
-};
-
 Cpu::Cpu() {
 	Cpu::regs.pc = 0x100;
 	Cpu::regs.a = 0x01;
 }
 Cpu::~Cpu() {}
-
-instruction *Cpu::instrucByOpcode(uint8_t byte) {
-	return (&instructions[byte]);
-}
 
 void Cpu::fetch_instruction() {
 	this->_opcode = gbmu.read(Cpu::regs.pc++);
@@ -44,8 +26,8 @@ bool Cpu::step(){
 		this->fetch_instruction();
 		this->fetch_data();
 
-		printf("%04X: (%02X %02X %02X)\n",
-			PC, this->_opcode,
+		printf("%04X: %7s (%02X %02X %02X)\n",
+			PC, instName(this->_cur_inst->type),this->_opcode,
 			gbmu.read(PC + 1), gbmu.read(PC + 2)
 		);
 
