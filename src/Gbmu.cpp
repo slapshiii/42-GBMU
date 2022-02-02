@@ -14,6 +14,28 @@ Gbmu::~Gbmu()
 void Gbmu::write(uint16_t addr, uint8_t data) {
 	if (addr < 0x8000)
 		this->_rom.write(addr, data);
+	else if (addr < 0xA000)	// Char/Map Data
+		;
+	else if (addr < 0xC000)	// ROM Ram
+		this->_rom.write(addr, data);
+	else if (addr < 0xE000)	// Working Ram (WRAM)
+		;
+	else if (addr < 0xFE00)	// Prohibited memory
+		return 0;
+	else if (addr < 0xFEA0)	// OAM
+		;
+	else if (addr < 0xFF00)	// Prohibited memory
+		return 0;
+	else if (addr < 0xFF80)	// IO Register
+		;
+	else if (addr < 0xFFFF)	// High Ram (HRAM)
+		;
+	else if (addr == 0xFFFF)// Interrupt Register
+		;
+	else {
+		dprintf(STDERR_FILENO, "Trying to write not implemented memory: %4X\n", addr);
+		exit(2);
+	}
 	return;
 }
 void Gbmu::write16(uint16_t addr, uint8_t value) {
@@ -22,8 +44,27 @@ void Gbmu::write16(uint16_t addr, uint8_t value) {
 }
 
 uint8_t Gbmu::read(uint16_t addr) {
-	if (addr < 0x8000)
+	if (addr < 0x8000)		// ROM Data
 		return (this->_rom.read(addr));
+	else if (addr < 0xA000)	// Char/Map Data
+		;
+	else if (addr < 0xC000)	// ROM Ram
+		return (this->_rom.read(addr));
+	else if (addr < 0xE000)	// Working Ram (WRAM)
+		;
+	else if (addr < 0xFE00)	// Prohibited memory
+		return 0;
+	else if (addr < 0xFEA0)	// OAM
+		;
+	else if (addr < 0xFF00)	// Prohibited memory
+		return 0;
+	else if (addr < 0xFF80)	// IO Register
+		;
+	else if (addr < 0xFFFF)	// High Ram (HRAM)
+		;
+	else if (addr == 0xFFFF)// Interrupt Register
+		;
+	dprintf(STDERR_FILENO, "Trying to read not implemented memory: %04X\nExiting...\n", addr);
 	exit(1);
 }
 uint16_t Gbmu::read16(uint16_t addr) {
