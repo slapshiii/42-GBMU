@@ -26,7 +26,7 @@ bool Cpu::step(){
 		this->fetch_instruction();
 		this->fetch_data();
 
-		printf("%04X: %7s (%02X %02X %02X)\n",
+		printf("%04X: %-7s (%02X %02X %02X)\n",
 			PC, instName(this->_cur_inst->type),this->_opcode,
 			gbmu.read(PC + 1), gbmu.read(PC + 2)
 		);
