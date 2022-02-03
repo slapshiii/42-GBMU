@@ -39,7 +39,7 @@ uint8_t Gbmu::read(uint16_t addr) {
 	if (addr < 0x8000)		// ROM Data
 		return (this->_rom.read(addr));
 	else if (addr < 0xA000)	// Char/Map Data
-		;
+		return 0;
 	else if (addr < 0xC000)	// ROM Ram
 		return (this->_rom.read(addr));
 	else if (addr < 0xE000)	// Working Ram (WRAM)

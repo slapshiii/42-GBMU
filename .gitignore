@@ -1,6 +1,8 @@
 .vscode/
 gbmu
 
+*.txt
+
 # Prerequisites
 *.d
 
