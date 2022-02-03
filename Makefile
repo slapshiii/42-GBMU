@@ -6,7 +6,7 @@
 #    By: phnguyen <phnguyen@student.42.fr>          +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2021/12/14 01:20:15 by phnguyen          #+#    #+#              #
-#    Updated: 2022/02/03 01:54:00 by phnguyen         ###   ########.fr        #
+#    Updated: 2022/02/03 13:05:10 by phnguyen         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -27,6 +27,7 @@ C_FILE =	main \
 			Gbmu \
 			Rom \
 			Ram \
+			Timer \
 			Cpu_instruc Cpu_fetch Cpu_utils Cpu
 
 SRC = $(addprefix $(SRCDIR), $(addsuffix .cpp, $(C_FILE)))

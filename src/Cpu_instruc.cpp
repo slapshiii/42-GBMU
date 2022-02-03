@@ -57,7 +57,6 @@ static bool is16Bit(reg_type rt) {
 static void proc_none(Cpu *c) {
 	(void)c;
 	dprintf(STDERR_FILENO, "Error: Invalid instruction: %02X\n", c->_opcode);
-	exit(-4);
 }
 static void proc_nop(Cpu *c) {
 	(void)c;

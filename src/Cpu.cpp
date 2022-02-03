@@ -5,7 +5,15 @@ extern Gbmu gbmu;
 
 Cpu::Cpu() {
 	Cpu::regs.pc = 0x100;
-	Cpu::regs.a = 0x01;
+	Cpu::regs.sp = 0xFFFE;
+	*((short *)&Cpu::regs.a) = 0xB001;
+	*((short *)&Cpu::regs.b) = 0x1300;
+	*((short *)&Cpu::regs.d) = 0xB800;
+	*((short *)&Cpu::regs.h) = 0x4D01;
+	this->_ie_register = 0;
+	this->_intFlags = 0;
+	this->_masterInt = false;
+	this->_enablingIme = false;
 }
 Cpu::~Cpu() {}
 
@@ -20,20 +28,31 @@ void Cpu::execute() {
 		proc(this);
 }
 
+static char db_msg[1024] = {0};
+static int	msg_size = 0;
 bool Cpu::step(){
 	if (!this->_halted) {
 		uint16_t PC = Cpu::regs.pc;
 		this->fetch_instruction();
+		gbmu.cycle(1);
 		this->fetch_data();
 
-		printf("%04X: %-7s (%02X %02X %02X)\n",
+		printf("[%08lX]%04X: %-7s (%02X %02X %02X)\n",
+			gbmu.ctx.ticks,
 			PC, instName(this->_cur_inst->type),this->_opcode,
 			gbmu.read(PC + 1), gbmu.read(PC + 2)
 		);
 
+		if (gbmu.read(0xFF02) == 0x81) {
+			char c = gbmu.read(0xFF01);
+			db_msg[msg_size++] = c;
+			gbmu.write(0xFF02, 0);
+			dprintf(STDERR_FILENO, "DB: %s\n", db_msg);
+		}
+
 		this->execute();
 	} else {
-		++this->_cycle;
+		gbmu.cycle(1);
 		if (this->_intFlags)
 			this->_halted = false;
 	}
@@ -44,7 +63,6 @@ bool Cpu::step(){
 	if (this->_enablingIme) {
 		this->_masterInt = true;
 	}
-
 	return (true);
 }
 
@@ -55,6 +73,9 @@ void Cpu::handleInt() {
 	} else if (this->checkInt(0x58, IT_SERIAL)) {
 	} else if (this->checkInt(0x60, IT_JOYPAD)) {
 	}
+}
+void Cpu::requestInt(int_type it) {
+	this->_intFlags |= it;
 }
 
 uint16_t reverse(uint16_t n) {

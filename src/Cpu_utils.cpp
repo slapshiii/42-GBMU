@@ -254,7 +254,7 @@ instruction instructions[0x100] = {
 	[0xE8] = {IN_ADD, AM_R_D8 , RT_SP},
 	[0xE9] = {IN_JP , AM_R    , RT_HL},
 	[0xEA] = {IN_LD , AM_A16_R, RT_NONE, RT_A},
-	 //[0xEB],
+	//[0xEB],
 	//[0xEC],
 	//[0xED],
 	[0xEE] = {IN_XOR, AM_R_D8, RT_A},

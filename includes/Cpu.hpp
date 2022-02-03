@@ -150,7 +150,7 @@ public:
 	void execute();
 	void initInt(uint16_t addr);
 	bool checkInt(uint16_t addr, int_type it);
-	void requestInt();
+	void requestInt(int_type it);
 	void handleInt();
 
 	uint16_t readReg(reg_type reg);
