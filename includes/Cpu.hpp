@@ -89,6 +89,14 @@ typedef struct {
 	uint8_t		param = 0;
 }	instruction;
 
+typedef enum {
+	IT_VBLANK = 1,
+	IT_LCD_STAT = 2,
+	IT_TIMER = 4,
+	IT_SERIAL = 8,
+	IT_JOYPAD = 16
+}	int_type;
+
 typedef void (*IN_PROC)(Cpu *c);
 IN_PROC instGetProcessor(in_type type);
 const char *instName(in_type type);
@@ -117,6 +125,8 @@ public:
 	uint16_t		_memDest;
 	uint8_t			_opcode;
 	uint8_t			_cycle;
+	uint8_t			_ie_register;
+	uint8_t			_intFlags;
 	instruction*	_cur_inst;
 	bool			_stepping;
 	bool			_halted;
@@ -138,10 +148,19 @@ public:
 	void fetch_instruction();
 	void fetch_data();
 	void execute();
+	void initInt(uint16_t addr);
+	bool checkInt(uint16_t addr, int_type it);
+	void requestInt();
+	void handleInt();
 
 	uint16_t readReg(reg_type reg);
 	void setReg(reg_type reg, uint16_t value);
 	void setFlags(char z, char n, char h, char c);
+
+	uint8_t	getIeReg();
+	void	setIeReg(uint8_t val);
+	uint8_t	getIntFlags();
+	void	setIntFlags(uint8_t val);
 	
 };
 

@@ -1,4 +1,7 @@
 #include "Cpu.hpp"
+#include "Gmbu.hpp"
+
+extern Gbmu gbmu;
 
 instruction instructions[0x100] = {
 	//0x0X
@@ -333,4 +336,20 @@ std::string instLookup[] = {
 
 const char *instName(in_type type) {
 	return instLookup[type].c_str();
+}
+
+void Cpu::initInt(uint16_t addr) {
+	gbmu.stackPush16(Cpu::regs.pc);
+	Cpu::regs.pc = addr;
+}
+
+bool Cpu::checkInt(uint16_t addr, int_type it) {
+	if (this->_intFlags & it && this->_ie_register & it) {
+		this->initInt(addr);
+		this->_intFlags &= ~it;
+		this->_halted = false;
+		this->_masterInt = false;
+		return (true);
+	}
+	return (false);
 }

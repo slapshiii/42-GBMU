@@ -5,6 +5,7 @@
 
 #include "Cpu.hpp"
 #include "Rom.hpp"
+#include "Ram.hpp"
 #include "utils.hpp"
 
 class Gbmu
@@ -20,6 +21,7 @@ public:
 
 	Rom				_rom;
 	Cpu				_cpu;
+	Ram				_ram;
 
 public:
 	Gbmu();

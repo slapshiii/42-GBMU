@@ -32,9 +32,29 @@ bool Cpu::step(){
 		);
 
 		this->execute();
+	} else {
+		++this->_cycle;
+		if (this->_intFlags)
+			this->_halted = false;
+	}
+	if (this->_masterInt) {
+		this->handleInt();
+		this->_enablingIme = false;
+	}
+	if (this->_enablingIme) {
+		this->_masterInt = true;
 	}
 
 	return (true);
+}
+
+void Cpu::handleInt() {
+	if (this->checkInt(0x40, IT_VBLANK)) {
+	} else if (this->checkInt(0x48, IT_LCD_STAT)) {
+	} else if (this->checkInt(0x50, IT_TIMER)) {
+	} else if (this->checkInt(0x58, IT_SERIAL)) {
+	} else if (this->checkInt(0x60, IT_JOYPAD)) {
+	}
 }
 
 uint16_t reverse(uint16_t n) {
@@ -87,4 +107,17 @@ void Cpu::setReg(reg_type reg, uint16_t value) {
 	case RT_NONE:
 	default:	return;
 	}
+}
+
+uint8_t	Cpu::getIeReg() {
+	return (this->_ie_register);
+}
+void	Cpu::setIeReg(uint8_t val) {
+	this->_ie_register = val;
+}
+uint8_t	Cpu::getIntFlags() {
+	return (this->_intFlags);
+}
+void	Cpu::setIntFlags(uint8_t val) {
+	this->_intFlags = val;
 }
