@@ -28,7 +28,9 @@ C_FILE =	main \
 			Rom \
 			Ram \
 			Timer \
-			Cpu_instruc Cpu_fetch Cpu_utils Cpu
+			Cpu_instruc Cpu_fetch Cpu_utils Cpu \
+			Ppu \
+			Lcd
 
 SRC = $(addprefix $(SRCDIR), $(addsuffix .cpp, $(C_FILE)))
 OBJ = $(addprefix $(OBJDIR), $(addsuffix .o, $(C_FILE)))

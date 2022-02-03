@@ -17,6 +17,7 @@ Ppu::Ppu(){
     this->_lineSprites = 0;
     this->_fetchedEntryCount = 0;
     this->_winLine = 0;
+    LCDS_MODE_SET(MODE_OAM);
 }
 Ppu::~Ppu(){
     free(this->_videoBuf);
@@ -24,7 +25,7 @@ Ppu::~Ppu(){
 
 void	Ppu::step() {
     ++this->_lineTicks;
-    /*switch (LCDS_MODE)
+    switch (this->_lcd.lcds & 0b11)
     {
     case MODE_OAM:
         this->mode_oam();
@@ -37,8 +38,10 @@ void	Ppu::step() {
         break;
     case MODE_HBLANK:
         this->mode_hblank();
-        break;*/
+        break;
+    }
 }
+
 void	Ppu::writeOam(uint16_t addr, uint8_t value) {
     if (addr >= 0xFE00) {
         addr -= 0xFE00;
@@ -80,21 +83,30 @@ void	Ppu::mode_xfer() {
     //pipe_process(); TODO
     if (this->_pxQueue.pushedX >= XRES) {
         //pipe_queueReset(); TODO
-        //LCDS_MODE_SET(MODE_HBLANK);
-        //if (LCDS_STAT_INT(SS_HBLANK)) {
+        LCDS_MODE_SET(MODE_HBLANK);
+        if (LCDS_STAT_INT(SS_HBLANK)) {
             gbmu._cpu.requestInt(IT_LCD_STAT);
-        //}
+        }
     }
 }
 void	Ppu::mode_vblank() {
     if (this->_lineTicks >= TICKS_PER_FRAME) {
         //increment_ly();
-        if (lcd.ly >= LINES_PER_FRAME) {
+        if (this->_lcd.ly >= LINES_PER_FRAME) {
             LCDS_MODE_SET(MODE_OAM);
-            lcd.ly = 0;
+            this->_lcd.ly = 0;
             this->_winLine = 0;
         }
         this->_lineTicks = 0;
     }
 }
-void	Ppu::mode_hblank();
+void	Ppu::mode_hblank() {
+
+}
+void Ppu::incrementLy() {
+	this->_lcd.ly++;
+	if (this->_lcd.ly == this->_lcd.lyComp)
+	{
+		LCDS_LYC_SET(1);
+	}
+}

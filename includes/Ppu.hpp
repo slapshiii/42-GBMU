@@ -83,6 +83,8 @@ public:
 	uint32_t	_lineTicks;
 	uint32_t	*_videoBuf;
 
+	Lcd	_lcd;
+
 public:
 	Ppu(/* args */);
 	~Ppu();
@@ -94,6 +96,7 @@ public:
 	void	writeVram(uint16_t addr, uint8_t value);
 	uint8_t	readVram(uint16_t addr);
 
+	void	incrementLy();
 	void	mode_oam();
 	void	mode_xfer();
 	void	mode_vblank();
