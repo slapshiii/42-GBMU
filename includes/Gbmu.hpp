@@ -3,11 +3,16 @@
 
 #include <array>
 
+#include "Ppu.hpp"
 #include "Cpu.hpp"
 #include "Rom.hpp"
 #include "Ram.hpp"
 #include "Timer.hpp"
+#include "Lcd.hpp"
 #include "utils.hpp"
+
+class Ppu;
+class Cpu;
 
 class Gbmu
 {
@@ -24,6 +29,9 @@ public:
 	Cpu				_cpu;
 	Ram				_ram;
 	Timer			_timer;
+	Ppu				_ppu;
+	Lcd				_lcd;
+	
 	char			_serialData[2];
 
 public:

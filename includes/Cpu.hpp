@@ -140,7 +140,7 @@ public:
 	uint8_t	(*readBus)(uint16_t addr);
 
 public:
-	Cpu(/* args */);
+	Cpu(bool dmgMode);
 	~Cpu();
 
 	bool step();
@@ -155,13 +155,16 @@ public:
 
 	uint16_t readReg(reg_type reg);
 	void setReg(reg_type reg, uint16_t value);
-	void setFlags(char z, char n, char h, char c);
+	void setFlags(int8_t z, int8_t n, int8_t h, int8_t c);
 
 	uint8_t	getIeReg();
 	void	setIeReg(uint8_t val);
 	uint8_t	getIntFlags();
 	void	setIntFlags(uint8_t val);
 	
+private:
+	void	printDebug(uint16_t PC);
+
 };
 
 #endif

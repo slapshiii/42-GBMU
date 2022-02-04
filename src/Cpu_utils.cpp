@@ -1,5 +1,5 @@
 #include "Cpu.hpp"
-#include "Gmbu.hpp"
+#include "Gbmu.hpp"
 
 extern Gbmu gbmu;
 
@@ -283,6 +283,24 @@ instruction *Cpu::instrucByOpcode(uint8_t byte) {
 	return (&instructions[byte]);
 }
 
+std::string rtLookup[] = {
+	"<NONE>",
+	"A",
+	"F",
+	"B",
+	"C",
+	"D",
+	"E",
+	"H",
+	"L",
+	"AF",
+	"BC",
+	"DE",
+	"HL",
+	"SP",
+	"PC",
+};
+
 std::string instLookup[] = {
 	"NONE",
 	"NOP",
@@ -337,19 +355,152 @@ std::string instLookup[] = {
 const char *instName(in_type type) {
 	return instLookup[type].c_str();
 }
-
-void Cpu::initInt(uint16_t addr) {
-	gbmu.stackPush16(Cpu::regs.pc);
-	Cpu::regs.pc = addr;
+const char *rtName(reg_type type) {
+	return rtLookup[type].c_str();
 }
 
-bool Cpu::checkInt(uint16_t addr, int_type it) {
-	if (this->_intFlags & it && this->_ie_register & it) {
-		this->initInt(addr);
-		this->_intFlags &= ~it;
-		this->_halted = false;
-		this->_masterInt = false;
-		return (true);
+void Cpu::printDebug(uint16_t PC) {
+	char inst[16] = {0};
+	char flags[16];
+	sprintf(flags, "%c%c%c%c",
+		CPU_FLAG_Z ? 'Z' : '-',
+		CPU_FLAG_N ? 'N' : '-',
+		CPU_FLAG_H ? 'H' : '-',
+		CPU_FLAG_C ? 'C' : '-'
+	);
+	sprintf(inst, "%-4s ", instName(_cur_inst->type));
+	switch (this->_cur_inst->mode)
+	{
+	case AM_IMP:
+		sprintf(inst, "%s ", instName(_cur_inst->type));
+		break;
+	case AM_R_A16:
+	case AM_R_D16:
+		sprintf(inst, "%-4s %s,$%04X",
+			instName(_cur_inst->type),
+			rtName(_cur_inst->reg1),
+			_fetchData
+		);
+		break;
+	case AM_R:
+		sprintf(inst, "%-4s %s",
+			instName(_cur_inst->type),
+			rtName(_cur_inst->reg1)
+		);
+		break;
+	case AM_R_R:
+		sprintf(inst, "%-4s %s,%s",
+			instName(_cur_inst->type),
+			rtName(_cur_inst->reg1), rtName(_cur_inst->reg2)
+		);
+		break;
+	case AM_MR_R:
+		sprintf(inst, "%-4s (%s),%s",
+			instName(_cur_inst->type),
+			rtName(_cur_inst->reg1), rtName(_cur_inst->reg2)
+		);
+		break;
+	case AM_MR:
+		sprintf(inst, "%-4s (%s)",
+			instName(_cur_inst->type),
+			rtName(_cur_inst->reg1)
+		);
+		break;
+	case AM_R_MR:
+		sprintf(inst, "%-4s %s,(%s)",
+			instName(_cur_inst->type),
+			rtName(_cur_inst->reg1), rtName(_cur_inst->reg2)
+		);
+		break;
+	case AM_R_D8:
+	case AM_R_A8:
+		sprintf(inst, "%-4s %s,$%02X",
+			instName(_cur_inst->type),
+			rtName(_cur_inst->reg1),
+			_fetchData
+		);
+		break;
+	case AM_R_HLI:
+		sprintf(inst, "%-4s %s,(%s+)",
+			instName(_cur_inst->type),
+			rtName(_cur_inst->reg1), rtName(_cur_inst->reg2)
+		);
+		break;
+	case AM_R_HLD:
+		sprintf(inst, "%-4s %s,(%s-)",
+			instName(_cur_inst->type),
+			rtName(_cur_inst->reg1), rtName(_cur_inst->reg2)
+		);
+		break;
+	case AM_HLI_R:
+		sprintf(inst, "%-4s (%s+),%s",
+			instName(_cur_inst->type),
+			rtName(_cur_inst->reg1), rtName(_cur_inst->reg2)
+		);
+		break;
+	case AM_HLD_R:
+		sprintf(inst, "%-4s (%s-),%s",
+			instName(_cur_inst->type),
+			rtName(_cur_inst->reg1), rtName(_cur_inst->reg2)
+		);
+		break;
+	case AM_A8_R:
+		sprintf(inst, "%-4s $%02X,%s",
+			instName(_cur_inst->type),
+			gbmu.read(PC - 1),
+			rtName(_cur_inst->reg2)
+		);
+		break;
+	case AM_HL_SPR:
+		sprintf(inst, "%-4s (%s),SP+%d",
+			instName(_cur_inst->type),
+			rtName(_cur_inst->reg1),
+			_fetchData & 0xFF
+		);
+		break;
+	case AM_D8:
+		sprintf(inst, "%-4s $%02X",
+			instName(_cur_inst->type),
+			_fetchData & 0xFF
+		);
+		break;
+	case AM_D16:
+		sprintf(inst, "%-4s $%04X",
+			instName(_cur_inst->type),
+			_fetchData
+		);
+		break;
+	case AM_MR_D8:
+		sprintf(inst, "%-4s (%s),$%02X",
+			instName(_cur_inst->type),
+			rtName(_cur_inst->reg1),
+			_fetchData & 0xFF
+		);
+		break;
+	case AM_D16_R:
+	case AM_A16_R:
+		sprintf(inst, "%-4s ($%04X),%s",
+			instName(_cur_inst->type),
+			_fetchData,
+			rtName(_cur_inst->reg2)
+		);
+		break;
 	}
-	return (false);
+	printf("[%08lX]%04X:%-16s (%02X %02X %02X) A:%02X F:%s BC:%02X%02X DE:%02X%02X HL:%02X%02X SP:%04X\n",
+			gbmu.ctx.ticks,
+			PC,
+			inst,
+			this->_opcode,
+			gbmu.read(PC + 1),
+			gbmu.read(PC + 2),
+			Cpu::regs.a,
+			flags,
+			Cpu::regs.b,
+			Cpu::regs.c,
+			Cpu::regs.d,
+			Cpu::regs.e,
+			Cpu::regs.h,
+			Cpu::regs.l,
+			Cpu::regs.sp
+	);
 }

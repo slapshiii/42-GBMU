@@ -23,14 +23,14 @@ SRCDIR = src/
 OBJDIR = obj/
 INCL = includes/
 
-C_FILE =	main \
-			Gbmu \
-			Rom \
+C_FILE =	Rom \
 			Ram \
 			Timer \
 			Cpu_instruc Cpu_fetch Cpu_utils Cpu \
 			Ppu \
-			Lcd
+			Lcd \
+			Gbmu \
+			main
 
 SRC = $(addprefix $(SRCDIR), $(addsuffix .cpp, $(C_FILE)))
 OBJ = $(addprefix $(OBJDIR), $(addsuffix .o, $(C_FILE)))

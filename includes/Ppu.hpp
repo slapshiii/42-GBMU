@@ -1,12 +1,13 @@
 #ifndef _PPU_HPP
 #define _PPU_HPP
 
+#include <list>
+
 #include "utils.hpp"
-#include "Gmbu.hpp"
 #include "Lcd.hpp"
 
 static const int LINES_PER_FRAME = 154;
-static const int TICKS_PER_FRAME = 456;
+static const int TICKS_PER_LINE = 456;
 static const int YRES = 144;
 static const int XRES = 160;
 
@@ -18,20 +19,9 @@ typedef enum {
 	FS_PUSH
 } fetchState;
 
-typedef struct s_node {
-	struct s_node	*next;
-	uint32_t		data;
-}	node;
-
-typedef struct {
-	node	*head;
-	node	*tail;
-	uint32_t	size;
-}	queue;
-
 typedef struct {
 	fetchState	curFetchState;
-	queue		pixelQueue;
+	std::list<uint32_t>	pixelQueue;
 	uint8_t		lineX;
 	uint8_t		pushedX;
 	uint8_t		fetchX;
@@ -52,8 +42,8 @@ typedef struct {
 	unsigned	clr_pal: 3;
 	unsigned	char_bank: 1;
 	unsigned	dmg_m_pal: 1;
-	unsigned	h_flip: 1;
-	unsigned	v_flip: 1;
+	unsigned	h_flip: 1; //xflip
+	unsigned	v_flip: 1; //yflip
 	unsigned	dis_prio: 1;
 } oam_obj;
 
@@ -85,8 +75,14 @@ public:
 
 	Lcd	_lcd;
 
+private:
+	static uint32_t	_targetFrameTime;
+	static long		_prevFrameTime;
+	static long		_startTimer;
+	static long		_frameCount;
+
 public:
-	Ppu(/* args */);
+	Ppu();
 	~Ppu();
 
 	void	step();
@@ -101,6 +97,19 @@ public:
 	void	mode_xfer();
 	void	mode_vblank();
 	void	mode_hblank();
+
+	void	loadWinTile();
+	void	loadSptTile();
+	void	loadSptData(uint8_t offset);
+
+private:
+	bool isWinvisible();
+	bool queueAdd();
+	void pxlProcess();
+	void pxlFetch();
+	void pxlPush();
+
+	uint32_t fetchSptPx(int bit, uint32_t color, uint8_t bgColor);
 };
 
 #endif

@@ -1,5 +1,5 @@
 #include "Cpu.hpp"
-#include "Gmbu.hpp"
+#include "Gbmu.hpp"
 
 extern Gbmu gbmu;
 
@@ -15,7 +15,7 @@ static bool checkCondition(Cpu *cpu) {
 	}
 	return false;
 }
-void Cpu::setFlags(char z, char n, char h, char c) {
+void Cpu::setFlags(int8_t z, int8_t n, int8_t h, int8_t c) {
 	if (z != -1)
 		BITSET(Cpu::regs.f, 7, z);
 	if (n != -1)
@@ -28,11 +28,11 @@ void Cpu::setFlags(char z, char n, char h, char c) {
 static void gotoAddr(Cpu *c, uint16_t addr, bool pushpc) {
 	if (checkCondition(c)) {
 		if (pushpc) {
-			c->_cycle += 2;
-			gbmu.stackPush16(c->regs.pc);
+			gbmu.cycle(2);
+			gbmu.stackPush16(Cpu::regs.pc);
 		}
-		c->regs.pc = addr;
-		++c->_cycle;
+		Cpu::regs.pc = addr;
+		gbmu.cycle(1);
 	}
 }
 reg_type rt_lookup[] = {
@@ -71,12 +71,12 @@ static void proc_halt(Cpu *c) {
 static void proc_ld(Cpu *c) {
 	if (c->_destIsMem) {
 		if (is16Bit(c->_cur_inst->reg2)) {
-			++c->_cycle;
+			gbmu.cycle(1);
 			gbmu.write16(c->_memDest, c->_fetchData);
 		} else {
 			gbmu.write(c->_memDest, c->_fetchData);
 		}
-		++c->_cycle;
+		gbmu.cycle(1);
 		return;
 	}
 	if (c->_cur_inst->mode == AM_HL_SPR) {
@@ -87,7 +87,7 @@ static void proc_ld(Cpu *c) {
 		c->setFlags(0, 0, hflags, cflags);
 		c->setReg(
 			c->_cur_inst->reg1,
-			c->readReg(c->_cur_inst->reg2) + (uint8_t)c->_fetchData
+			c->readReg(c->_cur_inst->reg2) + (int8_t)c->_fetchData
 		);
 		return;
 	}
@@ -99,13 +99,14 @@ static void proc_ldh(Cpu *c) {
 	} else {
 		gbmu.write(c->_memDest, Cpu::regs.a);
 	}
-	++c->_cycle;
+	gbmu.cycle(1);
 }
 static void proc_jp(Cpu *c) {
 	gotoAddr(c, c->_fetchData, false);
 }
 static void proc_jr(Cpu *c) {
-	uint8_t rel = (uint8_t)(c->_fetchData & 0xFF);
+	int8_t rel;
+	rel = (c->_fetchData & 0xFF);
 	uint16_t addr = Cpu::regs.pc + rel;
 	gotoAddr(c, addr, false);
 }
@@ -117,15 +118,15 @@ static void proc_rst(Cpu *c) {
 }
 static void proc_ret(Cpu *c) {
 	if (c->_cur_inst->cond != CT_NONE)
-		++c->_cycle;
+		gbmu.cycle(1);
 	if (checkCondition(c)) {
 		uint16_t lo = gbmu.stackPop();
-		++c->_cycle;
+		gbmu.cycle(1);
 		uint16_t hi = gbmu.stackPop();
-		++c->_cycle;
+		gbmu.cycle(1);
 		uint16_t n = (hi << 8) | lo;
 		Cpu::regs.pc = n;
-		++c->_cycle;
+		gbmu.cycle(1);
 	}
 }
 static void proc_reti(Cpu *c) {
@@ -140,9 +141,9 @@ static void proc_ei(Cpu *c) {
 }
 static void proc_pop(Cpu *c) {
 	uint16_t lo = gbmu.stackPop();
-	++c->_cycle;
+	gbmu.cycle(1);
 	uint16_t hi = gbmu.stackPop();
-	++c->_cycle;
+	gbmu.cycle(1);
 	uint16_t n = (hi << 8) | lo;
 	c->setReg(c->_cur_inst->reg1, n);
 	if (c->_cur_inst->reg1 == RT_AF) {
@@ -151,17 +152,17 @@ static void proc_pop(Cpu *c) {
 }
 static void proc_push(Cpu *c) {
 	uint16_t hi = (c->readReg(c->_cur_inst->reg1) >> 8) & 0xFF;
-	++c->_cycle;
+	gbmu.cycle(1);
 	gbmu.stackPush(hi);
 	uint16_t lo = c->readReg(c->_cur_inst->reg1) & 0xFF;
-	++c->_cycle;
+	gbmu.cycle(1);
 	gbmu.stackPush(lo);
-	++c->_cycle;
+	gbmu.cycle(1);
 }
 static void proc_inc(Cpu *c) {
 	uint16_t val = c->readReg(c->_cur_inst->reg1) + 1;
 	if (is16Bit(c->_cur_inst->reg1))
-		++c->_cycle;
+		gbmu.cycle(1);
 	if (c->_cur_inst->reg1 == RT_HL && c->_cur_inst->mode == AM_MR) {
 		val = gbmu.read(c->readReg(RT_HL)) + 1;
 		val &= 0xFF;
@@ -177,7 +178,7 @@ static void proc_inc(Cpu *c) {
 static void proc_dec(Cpu *c) {
 	uint16_t val = c->readReg(c->_cur_inst->reg1) - 1;
 	if (is16Bit(c->_cur_inst->reg1))
-		++c->_cycle;
+		gbmu.cycle(1);
 	if (c->_cur_inst->reg1 == RT_HL && c->_cur_inst->mode == AM_MR) {
 		val = gbmu.read(c->readReg(RT_HL)) - 1;
 		gbmu.write(c->readReg(RT_HL), val);
@@ -243,10 +244,10 @@ static void proc_cb(Cpu *c) {
 	uint8_t bit_op = (op >> 6) & 011;
 	uint8_t reg_val = c->readReg(reg);
 
-	++c->_cycle;
+	gbmu.cycle(1);
 
 	if (reg == RT_HL) {
-		c->_cycle += 2;
+		gbmu.cycle(2);
 	}
 	switch (bit_op)
 	{
@@ -303,7 +304,7 @@ static void proc_cb(Cpu *c) {
 		c->setFlags(!reg_val, 0, 0, !!(old & 0x80));
 	} return;
 	case 5: { //SRA
-		uint8_t u = (uint8_t)reg_val >> 1;
+		uint8_t u = (int8_t)reg_val >> 1;
 		c->setReg(reg, u);
 		c->setFlags(!u, 0, 0, reg_val & 1);
 	} return;
@@ -372,7 +373,7 @@ static void proc_add(Cpu *cpu) {
 	uint32_t val = cpu->readReg(cpu->_cur_inst->reg1) + cpu->_fetchData;
 	bool is16bit = is16Bit(cpu->_cur_inst->reg1);
 	if (is16bit)
-		++cpu->_cycle;
+		gbmu.cycle(1);
 	if (cpu->_cur_inst->reg1 == RT_SP)
 		val = cpu->readReg(cpu->_cur_inst->reg1) + (int8_t)cpu->_fetchData;
 	int z = (val & 0xFF) == 0;

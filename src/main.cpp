@@ -1,4 +1,4 @@
-#include "Gmbu.hpp"
+#include "Gbmu.hpp"
 
 Gbmu gbmu;
 

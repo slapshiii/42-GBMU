@@ -1,6 +1,6 @@
-#include "Gmbu.hpp"
+#include "Gbmu.hpp"
 
-Gbmu::Gbmu() {
+Gbmu::Gbmu() : _cpu(false) {
 	ctx.paused = false;
 	ctx.running = true;
 	ctx.ticks = 0;
@@ -11,7 +11,7 @@ void Gbmu::write(uint16_t addr, uint8_t data) {
 	if (addr < 0x8000)
 		this->_rom.write(addr, data);
 	else if (addr < 0xA000)	// Char/Map Data
-		;
+		this->_ppu.writeVram(addr, data);
 	else if (addr < 0xC000)	// ROM Ram
 		this->_rom.write(addr, data);
 	else if (addr < 0xE000)	// Working Ram (WRAM)
@@ -19,7 +19,7 @@ void Gbmu::write(uint16_t addr, uint8_t data) {
 	else if (addr < 0xFE00)	// Prohibited memory
 		return;
 	else if (addr < 0xFEA0)	// OAM
-		;
+		this->_ppu.writeOam(addr, data);
 	else if (addr < 0xFF00)	// Prohibited memory
 		return;
 	else if (addr < 0xFF80)	// IO Register
@@ -39,7 +39,7 @@ uint8_t Gbmu::read(uint16_t addr) {
 	if (addr < 0x8000)		// ROM Data
 		return (this->_rom.read(addr));
 	else if (addr < 0xA000)	// Char/Map Data
-		return 0;
+		return (this->_ppu.readVram(addr));
 	else if (addr < 0xC000)	// ROM Ram
 		return (this->_rom.read(addr));
 	else if (addr < 0xE000)	// Working Ram (WRAM)
@@ -47,7 +47,7 @@ uint8_t Gbmu::read(uint16_t addr) {
 	else if (addr < 0xFE00)	// Prohibited memory
 		return 0;
 	else if (addr < 0xFEA0)	// OAM
-		return 0;
+		return (this->_ppu.readOam(addr));
 	else if (addr < 0xFF00)	// Prohibited memory
 		return 0;
 	else if (addr < 0xFF80)	// IO Register
@@ -67,23 +67,28 @@ uint16_t Gbmu::read16(uint16_t addr) {
 void Gbmu::writeIO(uint16_t addr, uint8_t value) {
 	if (addr == 0xFF00) //Gamepad TODO
 		return ;
-	if (addr == 0xFF01)
+	if (addr == 0xFF01) {
 		this->_serialData[0] = value;
 		return ;
-	if (addr == 0xFF02)
+	}
+	if (addr == 0xFF02) {
 		this->_serialData[1] = value;
 		return ;
-	if (BETWEEN(addr, 0xFF04, 0xFF07))
+	}
+	if (BETWEEN(addr, 0xFF04, 0xFF07)) {
 		this->_timer.write(addr, value);
 		return ;
-	if (addr == 0xFF0F)
+	}
+	if (addr == 0xFF0F) {
 		this->_cpu.setIntFlags(value);
 		return ;
+	}
 	if (BETWEEN(addr, 0xFF10, 0xFF3F)) //Sound TODO
 		return ;
-	if (BETWEEN(addr, 0xFF40, 0xFF4B)) //LCD TODO
+	if (BETWEEN(addr, 0xFF40, 0xFF4B)) {
+		this->_lcd.write(addr, value);
 		return ;
-	dprintf(STDERR_FILENO, "Error: invalid write: %04X\n", addr);
+	}
 }
 uint8_t Gbmu::readIO(uint16_t addr) {
 	if (addr == 0xFF00) //Gamepad TODO
@@ -99,13 +104,13 @@ uint8_t Gbmu::readIO(uint16_t addr) {
 	if (BETWEEN(addr, 0xFF10, 0xFF3F)) //Sound TODO
 		return 0;
 	if (BETWEEN(addr, 0xFF40, 0xFF4B)) //LCD TODO
-		return 0;
+		return this->_lcd.read(addr);
 	dprintf(STDERR_FILENO, "Error: invalid read: %04X\n", addr);
 	return 0;
 }
 
 void Gbmu::stackPush(uint8_t data) {
-	--this->_cpu.regs.sp;
+	Cpu::regs.sp--;
 	this->write(this->_cpu.regs.sp, data);
 }
 void Gbmu::stackPush16(uint16_t data) {
@@ -113,7 +118,7 @@ void Gbmu::stackPush16(uint16_t data) {
 	this->stackPush(data & 0xFF);
 }
 uint8_t		Gbmu::stackPop() {
-	return (this->read(this->_cpu.regs.sp++));
+	return (this->read(Cpu::regs.sp++));
 }
 uint16_t	Gbmu::stackPop16() {
 	uint16_t lo = this->stackPop();
@@ -148,11 +153,12 @@ int	Gbmu::gbmu_run(int ac, char** av)
 }
 
 void Gbmu::cycle(int n) {
+	std::cout << "cycle" << std::endl; 
 	for (int i = 0; i < n; ++i) {
 		for (int j = 0; j < 4; ++j) {
 			++this->ctx.ticks;
 			this->_timer.step();
-			//PPUstep TODO
+			_ppu.step();
 		}
 		//DMAstep TODO
 	}

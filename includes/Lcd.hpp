@@ -1,7 +1,6 @@
 #ifndef _LCD_HPP
 #define _LCD_HPP
 
-#include "Gmbu.hpp"
 #include "utils.hpp"
 
 #define	LCDC_BGW_ENABLE (BIT(this->_lcd.lcdc, 0))
@@ -16,7 +15,7 @@
 #define LCDS_MODE ((lcd_mode)(this->_lcd.lcds & 0b11))
 #define LCDS_MODE_SET(mode) { this->_lcd.lcds &= ~0b11; this->_lcd.lcds |= mode; }
 #define LCDS_LYC (BIT(this->_lcd.lcds, 2))
-#define LCDS_LYC_SET(b) (BIT_SET(this->_lcd.lcds, 2, b))
+#define LCDS_LYC_SET(b) (BITSET(this->_lcd.lcds, 2, b))
 
 #define LCDS_STAT_INT(src) (this->_lcd.lcds & src)
 

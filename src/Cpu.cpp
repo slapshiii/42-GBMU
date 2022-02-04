@@ -1,14 +1,14 @@
 #include "Cpu.hpp"
-#include "Gmbu.hpp"
+#include "Gbmu.hpp"
 
 extern Gbmu gbmu;
 
-Cpu::Cpu() {
+Cpu::Cpu(bool dmgMode) {
 	Cpu::regs.pc = 0x100;
 	Cpu::regs.sp = 0xFFFE;
-	*((short *)&Cpu::regs.a) = 0xB001;
+	*((short *)&Cpu::regs.a) = (dmgMode) ? 0xB001 : 0xB011;
 	*((short *)&Cpu::regs.b) = 0x1300;
-	*((short *)&Cpu::regs.d) = 0xB800;
+	*((short *)&Cpu::regs.d) = 0xD800;
 	*((short *)&Cpu::regs.h) = 0x4D01;
 	this->_ie_register = 0;
 	this->_intFlags = 0;
@@ -37,17 +37,14 @@ bool Cpu::step(){
 		gbmu.cycle(1);
 		this->fetch_data();
 
-		printf("[%08lX]%04X: %-7s (%02X %02X %02X)\n",
-			gbmu.ctx.ticks,
-			PC, instName(this->_cur_inst->type),this->_opcode,
-			gbmu.read(PC + 1), gbmu.read(PC + 2)
-		);
+		printDebug(PC);
 
 		if (gbmu.read(0xFF02) == 0x81) {
 			char c = gbmu.read(0xFF01);
 			db_msg[msg_size++] = c;
 			gbmu.write(0xFF02, 0);
-			dprintf(STDERR_FILENO, "DB: %s\n", db_msg);
+			if (msg_size % 50 == 0)
+				dprintf(STDERR_FILENO, "DB: %s\n", db_msg);
 		}
 
 		this->execute();
@@ -64,6 +61,22 @@ bool Cpu::step(){
 		this->_masterInt = true;
 	}
 	return (true);
+}
+
+void Cpu::initInt(uint16_t addr) {
+	gbmu.stackPush16(Cpu::regs.pc);
+	Cpu::regs.pc = addr;
+}
+
+bool Cpu::checkInt(uint16_t addr, int_type it) {
+	if (this->_intFlags & it && this->_ie_register & it) {
+		this->initInt(addr);
+		this->_intFlags &= ~it;
+		this->_halted = false;
+		this->_masterInt = false;
+		return (true);
+	}
+	return (false);
 }
 
 void Cpu::handleInt() {

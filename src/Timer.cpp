@@ -1,5 +1,5 @@
 #include "Timer.hpp"
-#include "Gmbu.hpp"
+#include "Gbmu.hpp"
 
 extern Gbmu gbmu;
 

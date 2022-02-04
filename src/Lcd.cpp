@@ -1,5 +1,4 @@
 #include "Lcd.hpp"
-#include "Gmbu.hpp"
 
 static unsigned long colorDefault[4] = {
 	0xFFFFFFFF,
