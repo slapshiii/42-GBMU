@@ -6,7 +6,7 @@ extern Gbmu gbmu;
 Cpu::Cpu(bool dmgMode) {
 	Cpu::regs.pc = 0x100;
 	Cpu::regs.sp = 0xFFFE;
-	*((short *)&Cpu::regs.a) = (dmgMode) ? 0xB001 : 0xB011;
+	*((short *)&Cpu::regs.a) = (!dmgMode) ? 0xB001 : 0xB011;
 	*((short *)&Cpu::regs.b) = 0x1300;
 	*((short *)&Cpu::regs.d) = 0xD800;
 	*((short *)&Cpu::regs.h) = 0x4D01;
@@ -43,8 +43,9 @@ bool Cpu::step(){
 			char c = gbmu.read(0xFF01);
 			db_msg[msg_size++] = c;
 			gbmu.write(0xFF02, 0);
-			if (msg_size % 50 == 0)
-				dprintf(STDERR_FILENO, "DB: %s\n", db_msg);
+		}
+		if (db_msg[0]) {
+			printf("DB: %s\n", db_msg);
 		}
 
 		this->execute();

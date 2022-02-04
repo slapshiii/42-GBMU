@@ -58,7 +58,7 @@ instruction instructions[0x100] = {
 	//0x3X
 	[0x30] = {IN_JR , AM_D8   , RT_NONE, RT_NONE, CT_NC},
 	[0x31] = {IN_LD , AM_R_D16, RT_SP},
-	[0x32] = {IN_LD , AM_HLD_R, RT_SP  , RT_A},
+	[0x32] = {IN_LD , AM_HLD_R, RT_HL  , RT_A},//
 	[0x33] = {IN_INC, AM_R    , RT_SP  , RT_NONE, CT_NONE, 0},
 	[0x34] = {IN_INC, AM_MR   , RT_HL  , RT_NONE, CT_NONE, 0},
 	[0x35] = {IN_DEC, AM_MR   , RT_HL  , RT_NONE, CT_NONE, 0},

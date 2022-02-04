@@ -111,7 +111,7 @@ uint8_t Gbmu::readIO(uint16_t addr) {
 
 void Gbmu::stackPush(uint8_t data) {
 	Cpu::regs.sp--;
-	this->write(this->_cpu.regs.sp, data);
+	this->write(Cpu::regs.sp, data);
 }
 void Gbmu::stackPush16(uint16_t data) {
 	this->stackPush((data >> 8) & 0xFF);
@@ -153,7 +153,6 @@ int	Gbmu::gbmu_run(int ac, char** av)
 }
 
 void Gbmu::cycle(int n) {
-	std::cout << "cycle" << std::endl; 
 	for (int i = 0; i < n; ++i) {
 		for (int j = 0; j < 4; ++j) {
 			++this->ctx.ticks;

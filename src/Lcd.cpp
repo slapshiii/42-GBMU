@@ -30,6 +30,8 @@ Lcd::Lcd()
 Lcd::~Lcd(){}
 
 uint8_t	Lcd::read(uint16_t addr) {
+	if (addr == 0xFF44)
+		return (0x90); //FAKE LY 
 	uint8_t	newAddr = (addr - 0xFF40);
 	uint8_t	*ptr = (uint8_t *)this;
 	return (ptr[newAddr]);

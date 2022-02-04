@@ -105,8 +105,7 @@ static void proc_jp(Cpu *c) {
 	gotoAddr(c, c->_fetchData, false);
 }
 static void proc_jr(Cpu *c) {
-	int8_t rel;
-	rel = (c->_fetchData & 0xFF);
+	int8_t rel = (int8_t)(c->_fetchData & 0xFF);
 	uint16_t addr = Cpu::regs.pc + rel;
 	gotoAddr(c, addr, false);
 }
@@ -188,7 +187,7 @@ static void proc_dec(Cpu *c) {
 	}
 	if ((c->_opcode & 0x0B) == 0x0B)
 		return;
-	c->setFlags(val == 0, 1, (val & 0x0F) == 0, -1);
+	c->setFlags(val == 0, 1, (val & 0x0F) == 0x0F, -1);
 }
 static void proc_daa(Cpu *c) {
 	uint8_t	u = 0;
@@ -235,7 +234,7 @@ static void proc_scf(Cpu *c) {
 	c->setFlags(-1, 0, 0, 1);
 }
 static void proc_ccf(Cpu *c) {
-	c->setFlags(-1, 0, 0,CPU_FLAG_C ^ 1);
+	c->setFlags(-1, 0, 0, CPU_FLAG_C ^ 1);
 }
 static void proc_cb(Cpu *c) {
 	uint8_t op = c->_fetchData;
