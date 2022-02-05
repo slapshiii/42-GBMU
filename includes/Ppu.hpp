@@ -4,6 +4,8 @@
 #include <list>
 
 #include "utils.hpp"
+#include "Cpu.hpp"
+#include "Bus.hpp"
 #include "Lcd.hpp"
 
 static const int LINES_PER_FRAME = 154;
@@ -52,6 +54,8 @@ typedef struct s_oamLineEntry {
 	struct s_oamLineEntry	*next;
 }	oamLineEntry;
 
+class Cpu;
+class Bus;
 class Ppu
 {
 public:
@@ -76,16 +80,23 @@ public:
 	Lcd	_lcd;
 
 private:
+	Cpu	&_cpu;
+	Bus	&_bus;
+
 	static uint32_t	_targetFrameTime;
 	static long		_prevFrameTime;
 	static long		_startTimer;
 	static long		_frameCount;
 
 public:
-	Ppu();
+	Ppu(Bus &b, Cpu &c);
 	~Ppu();
 
 	void	step();
+
+	uint8_t	read(uint16_t addr);
+	void	write(uint16_t addr, uint8_t data);
+
 	void	writeOam(uint16_t addr, uint8_t value);
 	uint8_t	readOam(uint16_t addr);
 

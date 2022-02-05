@@ -6,10 +6,7 @@ Rom::~Rom(){
 }
 
 void Rom::write(uint16_t addr, uint8_t value) {
-	(void)addr;
-	(void)value;
-	return ;
-	//this->romData[addr] = value;
+	this->romData[addr] = value;
 }
 uint8_t Rom::read(uint16_t addr) {
 	return this->romData[addr];
@@ -25,6 +22,10 @@ char const* Rom::romTypeName() const {
 	if (this->header->type <= 0x22)
 		return (ROM_TYPES[this->header->type]);
 	return ("UNKNOWN");
+}
+
+bool	Rom::isCGB() {
+	return (romData[0x143] == 0x80 || romData[0x143] == 0xC0);
 }
 
 bool Rom::romLoad(const std::string &rom) {
@@ -55,13 +56,14 @@ bool Rom::romLoad(const std::string &rom) {
 	}
 	printf(
 		"Rom Loaded:\n"
-		"\t Title    : %s\n"
-		"\t Type     : %2.2X (%s)\n"
-		"\t Rom Size : %dKB\n"
-		"\t Ram Size : %2.2X\n"
-		"\t Lic Code : %2.2X (%s)\n"
-		"\t Rom Ver. : %2.2X\n"
-		"\t Checksum : %2.2X (%s)\n",
+		"\tTitle    : %s\n"
+		"\tType     : %2.2X (%s)\n"
+		"\tRom Size : %dKB\n"
+		"\tRam Size : %2.2X\n"
+		"\tLic Code : %2.2X (%s)\n"
+		"\tRom Ver. : %2.2X\n"
+		"\tChecksum : %2.2X (%s)\n"
+		"\tCBG Mode : %s\n",
 		this->header->title,
 		this->header->type, this->romTypeName(),
 		(32 << this->header->romSize),
@@ -69,7 +71,8 @@ bool Rom::romLoad(const std::string &rom) {
 		this->header->licCode, this->romLicName(),
 		this->header->version,
 		this->header->checksum,
-		(x & 0xFF) ? "PASSED" : "FAILED"
+		(x & 0xFF) ? "PASSED" : "FAILED",
+		isCGB() ? "CGB" : "Non CGB"
 	);
 	return (true);
 }

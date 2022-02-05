@@ -6,13 +6,15 @@
 #include "Ppu.hpp"
 #include "Cpu.hpp"
 #include "Rom.hpp"
-#include "Ram.hpp"
 #include "Timer.hpp"
 #include "Lcd.hpp"
+#include "Bus.hpp"
 #include "utils.hpp"
 
 class Ppu;
 class Cpu;
+class Timer;
+class Bus;
 
 class Gbmu
 {
@@ -39,29 +41,16 @@ public:
 
 	//ROM interface
 	bool	loadCartrige(const std::string &path);
+	bool	set_dmgForce(bool);
+	bool	set_cgbMode(bool);
+
+	int	gbmu_runCL(int ac, char** av);
 
 private:
 
 	//save the game (progress in pokemon)
 	void 	saveGame(const std::vector<uint8_t> &sram);
-
 	void	run();
-
-
-
-	void write(uint16_t addr, uint8_t value);
-	void write16(uint16_t addr, uint8_t value);
-	void writeIO(uint16_t addr, uint8_t value);
-	uint8_t read(uint16_t addr);
-	uint16_t read16(uint16_t addr);
-	uint8_t readIO(uint16_t addr);
-
-	void stackPush(uint8_t data);
-	void stackPush16(uint16_t data);
-	uint8_t		stackPop();
-	uint16_t	stackPop16();
-
-	int	gbmu_run(int ac, char** av);
 
 private:
 
@@ -84,6 +73,10 @@ private:
 		[this](uint16_t addr, uint8_t data){ return this->mem_write(addr, data); },
 		[this](size_t n){ return this->cycle(n); },
 	};
+	Ppu		_ppu { _bus, _cpu };
+	Timer	_timer;
+	Bus		_bus { _rom, _cpu, _ppu, _timer };
+
 };
 
 #endif
