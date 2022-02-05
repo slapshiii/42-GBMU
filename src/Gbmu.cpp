@@ -1,10 +1,6 @@
 #include "Gbmu.hpp"
 
-Gbmu::Gbmu() : _cpu(false) {
-	ctx.paused = false;
-	ctx.running = true;
-	ctx.ticks = 0;
-}
+Gbmu::Gbmu(){}
 Gbmu::~Gbmu(){}
 
 void Gbmu::write(uint16_t addr, uint8_t data) {
@@ -138,9 +134,9 @@ int	Gbmu::gbmu_run(int ac, char** av)
 		return (-2);
 	}
 	std::cout << "ROM loaded... : " << av[1] << std::endl;
-	while (this->ctx.running)
+	while (this->_is_running)
 	{
-		if (this->ctx.paused) {
+		if (this->_is_paused) {
 			sleep(1);
 			continue;
 		}
@@ -155,12 +151,15 @@ int	Gbmu::gbmu_run(int ac, char** av)
 void Gbmu::cycle(int n) {
 	for (int i = 0; i < n; ++i) {
 		for (int j = 0; j < 4; ++j) {
-			++this->ctx.ticks;
-			this->_timer.step();
-			_ppu.step();
+			++_ticks;
+			//this->_timer.step();
+			//_ppu.step();
 		}
 		//DMAstep TODO
 	}
 }
 
-Gbmu::gbmu_context* Gbmu::getContext() { return &ctx; };
+bool	Gbmu::loadCartrige(const std::string &path) {
+	_isRomLoaded = _rom.romLoad(path.c_str());
+	return _isRomLoaded;
+}

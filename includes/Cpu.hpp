@@ -140,7 +140,10 @@ public:
 	uint8_t	(*readBus)(uint16_t addr);
 
 public:
-	Cpu(bool dmgMode);
+	Cpu(std::function<uint8_t(uint16_t)> read,
+		std::function<void(uint16_t, uint8_t)> write,
+		std::function<void(size_t)> cycle
+	);
 	~Cpu();
 
 	bool step();

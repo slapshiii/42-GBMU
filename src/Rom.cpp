@@ -27,7 +27,7 @@ char const* Rom::romTypeName() const {
 	return ("UNKNOWN");
 }
 
-bool Rom::romLoad(char *rom) {
+bool Rom::romLoad(const std::string &rom) {
 	std::fstream	fs;
 	this->filename = rom;
 
