@@ -80,6 +80,5 @@ uint8_t Bus::read(uint16_t addr) {
 		return (_hram[addr - 0xFF80]);
 	else if (addr == 0xFFFF)// Interrupt Register
 		return (_cpu.getIeReg());
-	dprintf(STDERR_FILENO, "Trying to read not implemented memory: %04X\nExiting...\n", addr);
-	exit(1);
+	return 0;
 }

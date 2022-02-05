@@ -1,7 +1,4 @@
 #include "Cpu.hpp"
-#include "Gbmu.hpp"
-
-extern Gbmu gbmu;
 
 bool	Cpu::checkCondition(){
 	bool z = CPU_FLAG_Z;
@@ -161,7 +158,7 @@ void Cpu::proc_inc(void) {
 		cycle(1);
 	if (_cur_inst->reg1 == RT_HL && _cur_inst->mode == AM_MR) {
 		val = read(readReg(RT_HL)) + 1;
-		val &= 0xFF;
+		val &= 0x00FF;
 		write(readReg(RT_HL), val);
 	} else {
 		setReg(_cur_inst->reg1, val);
@@ -238,7 +235,7 @@ void Cpu::proc_cb(void) {
 	reg_type reg = decodeReg(op & 0b111);
 	uint8_t bit = (op >> 3) & 0b111;
 	uint8_t bit_op = (op >> 6) & 011;
-	uint8_t reg_val = readReg(reg);
+	uint8_t reg_val = readReg8(reg);
 
 	cycle(1);
 
@@ -252,11 +249,11 @@ void Cpu::proc_cb(void) {
 		return;
 	case 2: //RST
 		reg_val &= ~(1 << bit);
-		setReg(reg, reg_val);
+		setReg8(reg, reg_val);
 		return;
 	case 3: //SET
 		reg_val |= (1 << bit);
-		setReg(reg, reg_val);
+		setReg8(reg, reg_val);
 		return;
 	}
 	bool flagC = CPU_FLAG_C;
@@ -269,49 +266,49 @@ void Cpu::proc_cb(void) {
 			res |= 1;
 			setC = true;
 		}
-		setReg(reg, res);
+		setReg8(reg, res);
 		setFlags(res == 0, 0, 0, setC);
 	} return;
 	case 1: { //RRC
 		uint8_t old = reg_val;
 		reg_val >>= 1;
 		reg_val |= (old << 7);
-		setReg(reg, reg_val);
+		setReg8(reg, reg_val);
 		setFlags(!reg_val, 0, 0, old & 1);
 	} return;
 	case 2: { //RL
 		uint8_t old = reg_val;
 		reg_val <<= 1;
 		reg_val |= flagC;
-		setReg(reg, reg_val);
+		setReg8(reg, reg_val);
 		setFlags(!reg_val, 0, 0, !!(old & 0x80));
 	} return;
 	case 3: { //RR
 		uint8_t old = reg_val;
 		reg_val >>= 1;
 		reg_val |= (flagC << 7);
-		setReg(reg, reg_val);
+		setReg8(reg, reg_val);
 		setFlags(!reg_val, 0, 0, old & 1);
 	} return;
 	case 4: { //SLA
 		uint8_t old = reg_val;
 		reg_val <<= 1;
-		setReg(reg, reg_val);
+		setReg8(reg, reg_val);
 		setFlags(!reg_val, 0, 0, !!(old & 0x80));
 	} return;
 	case 5: { //SRA
 		uint8_t u = (int8_t)reg_val >> 1;
-		setReg(reg, u);
+		setReg8(reg, u);
 		setFlags(!u, 0, 0, reg_val & 1);
 	} return;
 	case 6: { //SWAP
 		reg_val = ((reg_val & 0xF0) >> 4) | ((reg_val & 0xF) << 4);
-		setReg(reg, reg_val);
+		setReg8(reg, reg_val);
 		setFlags(reg_val == 0, 0, 0, 0);
 	} return;
 	case 7: { //SRL
 		uint8_t u = reg_val >> 1;
-		setReg(reg, u);
+		setReg8(reg, u);
 		setFlags(!u, 0, 0, reg_val & 1);
 	} return;
 	}
@@ -358,10 +355,10 @@ void Cpu::proc_sbc(void) {
 }
 void Cpu::proc_adc(void) {
 	uint16_t u = _fetchData;
-	uint16_t a = Cpu::regs.a;
+	uint16_t a = regs.a;
 	uint16_t c = CPU_FLAG_C;
-	Cpu::regs.a = (a + u + c) & 0xFF;
-	setFlags(Cpu::regs.a == 0, 0,
+	regs.a = (a + u + c) & 0xFF;
+	setFlags(regs.a == 0, 0,
 		(a & 0xF) + (u & 0xF) + c > 0xF,
 		a + u + c > 0xFF);
 }

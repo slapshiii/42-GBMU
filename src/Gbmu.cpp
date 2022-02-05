@@ -14,6 +14,30 @@ uint8_t Gbmu::mem_read(uint16_t addr) {
 	return _bus.read(addr);
 }
 
+void	Gbmu::mem_dump(std::ostream &o, uint16_t addr, size_t len) {
+	size_t	i, j;
+	if (len == 0)
+		return;
+	o << std::hex << std::uppercase << std::setfill('0');
+	for (i = 0; i < len; i += 16) {
+		o << std::setw(4) << addr + i << ": ";
+		for (j = 0; (j < 16) && ((i + j) < len); ++j) {
+			o << std::setw(2) << static_cast<unsigned int>(mem_read(addr + i + j)) << ' ';
+		}
+		for (;j < 16; ++j)
+			o << " ";
+		o << "- ";
+		for (j = 0; (j < 16) && ((i + j) < len); ++j) {
+			char c = static_cast<char>(mem_read(addr + i + j));
+			if (c >= 0x20 && c < 0x7F)
+				o << c;
+			else
+				o << '.';
+		}
+		o << std::endl;
+	}
+}
+
 int	Gbmu::gbmu_runCL(int ac, char** av)
 {
 	if (ac != 2) {

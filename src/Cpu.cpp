@@ -184,6 +184,38 @@ void Cpu::setReg(reg_type reg, uint16_t value) {
 	}
 }
 
+uint8_t Cpu::readReg8(reg_type reg) {
+	switch (reg)
+	{
+	case RT_A: return regs.a;
+	case RT_F: return regs.f;
+	case RT_B: return regs.b;
+	case RT_C: return regs.c;
+	case RT_D: return regs.d;
+	case RT_E: return regs.e;
+	case RT_H: return regs.h;
+	case RT_L: return regs.l;
+	case RT_HL: return read(readReg(RT_HL));
+	default:	return 0;
+	}
+}
+
+void Cpu::setReg8(reg_type reg, uint8_t value) {
+	switch (reg)
+	{
+	case RT_A: regs.a = value & 0xFF; break;
+	case RT_F: regs.f = value & 0xFF; break;
+	case RT_B: regs.b = value & 0xFF; break;
+	case RT_C: regs.c = value & 0xFF; break;
+	case RT_D: regs.d = value & 0xFF; break;
+	case RT_E: regs.e = value & 0xFF; break;
+	case RT_H: regs.h = value & 0xFF; break;
+	case RT_L: regs.l = value & 0xFF; break;
+	case RT_HL: { write(readReg(RT_HL), value); };
+	default:	return ;
+	}
+}
+
 uint8_t	Cpu::getIntFlags() {
 	return (this->_intFlags);
 }

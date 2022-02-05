@@ -44,7 +44,9 @@ public:
 	bool	set_dmgForce(bool);
 	bool	set_cgbMode(bool);
 
-	int	gbmu_runCL(int ac, char** av);
+	//Debug
+	void	mem_dump(std::ostream &o, uint16_t addr, size_t len);
+	int		gbmu_runCL(int ac, char** av);
 
 private:
 

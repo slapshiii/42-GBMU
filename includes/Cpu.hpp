@@ -82,9 +82,11 @@ private:
 	bool	checkCondition();
 	void	gotoAddr(uint16_t addr, bool pushpc);
 
-	uint16_t readReg(reg_type reg);
-	void setReg(reg_type reg, uint16_t value);
-	void setFlags(int8_t z, int8_t n, int8_t h, int8_t c);
+	uint16_t	readReg(reg_type reg);
+	void 		setReg(reg_type reg, uint16_t value);
+	uint8_t		readReg8(reg_type reg);
+	void		setReg8(reg_type reg, uint8_t value);
+	void		setFlags(int8_t z, int8_t n, int8_t h, int8_t c);
 
 	void	proc_none();
 	void	proc_nop();
