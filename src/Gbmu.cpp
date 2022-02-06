@@ -48,7 +48,7 @@ int	Gbmu::gbmu_runCL(int ac, char** av)
 		std::cerr << "Error: Failed to load ROM: " << av[1] << std::endl;
 		return (-2);
 	}
-	std::cout << "ROM loaded... : " << av[1] << std::endl;
+	std::cerr << "ROM loaded... : " << av[1] << std::endl;
 	_cgb_mode = _rom.isCGB();
 	while (this->_is_running)
 	{

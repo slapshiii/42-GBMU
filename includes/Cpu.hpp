@@ -42,6 +42,10 @@ public:
 	bool			_destIsMem;
 	bool			_masterInt;
 	bool			_enablingIme;
+	uint32_t	cycles;
+
+private:
+	
 
 public:
 	Cpu(std::function<uint8_t(uint16_t)> read,
@@ -71,11 +75,13 @@ public:
 	
 private:
 	void	printDebug(uint16_t PC);
+	void	printDebug(void);
+
 
 	uint16_t	read16(uint16_t addr);
-	void	write16(uint16_t addr, uint8_t value);
-	void	stackPush(uint8_t data);
-	void	stackPush16(uint16_t data);
+	void		write16(uint16_t addr, uint16_t value);
+	void		stackPush(uint8_t data);
+	void		stackPush16(uint16_t data);
 	uint8_t		stackPop();
 	uint16_t	stackPop16();
 

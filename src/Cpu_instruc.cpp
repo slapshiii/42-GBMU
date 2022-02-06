@@ -74,11 +74,11 @@ void Cpu::proc_ld(void) {
 		return;
 	}
 	if (_cur_inst->mode == AM_HL_SPR) {
-		uint8_t hflags = (readReg(_cur_inst->reg2) & 0xF)
+		uint8_t hflag = (readReg(_cur_inst->reg2) & 0xF)
 			+ (_fetchData & 0xF) >= 0x10;
-		uint8_t cflags = (readReg(_cur_inst->reg2) & 0xFF)
+		uint8_t cflag = (readReg(_cur_inst->reg2) & 0xFF)
 			+ (_fetchData & 0xFF) >= 0x100;
-		setFlags(0, 0, hflags, cflags);
+		setFlags(0, 0, hflag, cflag);
 		setReg(
 			_cur_inst->reg1,
 			readReg(_cur_inst->reg2) + (int8_t)_fetchData
@@ -91,7 +91,7 @@ void Cpu::proc_ldh(void) {
 	if (_cur_inst->reg1 == RT_A) {
 		setReg(_cur_inst->reg1, read(0xFF00 | _fetchData));
 	} else {
-		write(_memDest, Cpu::regs.a);
+		write(_memDest, regs.a);
 	}
 	cycle(1);
 }
@@ -100,7 +100,7 @@ void Cpu::proc_jp(void) {
 }
 void Cpu::proc_jr(void) {
 	int8_t rel = (int8_t)(_fetchData & 0xFF);
-	uint16_t addr = Cpu::regs.pc + rel;
+	uint16_t addr = regs.pc + rel;
 	gotoAddr(addr, false);
 }
 void Cpu::proc_call(void) {
@@ -118,7 +118,7 @@ void Cpu::proc_ret(void) {
 		uint16_t hi = stackPop();
 		cycle(1);
 		uint16_t n = (hi << 8) | lo;
-		Cpu::regs.pc = n;
+		regs.pc = n;
 		cycle(1);
 	}
 }
@@ -158,7 +158,7 @@ void Cpu::proc_inc(void) {
 		cycle(1);
 	if (_cur_inst->reg1 == RT_HL && _cur_inst->mode == AM_MR) {
 		val = read(readReg(RT_HL)) + 1;
-		val &= 0x00FF;
+		val &= 0xFF;
 		write(readReg(RT_HL), val);
 	} else {
 		setReg(_cur_inst->reg1, val);
@@ -186,42 +186,42 @@ void Cpu::proc_dec(void) {
 void Cpu::proc_daa(void) {
 	uint8_t	u = 0;
 	int		fc = 0;
-	if (CPU_FLAG_H || (!CPU_FLAG_N && (Cpu::regs.a & 0xF) > 9))
+	if (CPU_FLAG_H || (!CPU_FLAG_N && (regs.a & 0xF) > 9))
 		u = 6;
-	if (CPU_FLAG_C || (!CPU_FLAG_N && Cpu::regs.a > 0x99)) {
+	if (CPU_FLAG_C || (!CPU_FLAG_N && regs.a > 0x99)) {
 		u |= 0x60;
 		fc = 1;
 	}
-	Cpu::regs.a += CPU_FLAG_N ? -u : u;
-	setFlags(Cpu::regs.a == 0, -1, 0, fc);
+	regs.a += CPU_FLAG_N ? -u : u;
+	setFlags(regs.a == 0, -1, 0, fc);
 }
 void Cpu::proc_rra(void) {
 	uint8_t carry = CPU_FLAG_C;
-	uint8_t newC = Cpu::regs.a & 1;
-	Cpu::regs.a >>= 1;
-	Cpu::regs.a |= (carry << 7);
+	uint8_t newC = regs.a & 1;
+	regs.a >>= 1;
+	regs.a |= (carry << 7);
 	setFlags(0, 0, 0, newC);
 }
 void Cpu::proc_and(void) {
-	Cpu::regs.a &= _fetchData;
-	setFlags(Cpu::regs.a == 0, 0, 1, 0);
+	regs.a &= _fetchData;
+	setFlags(regs.a == 0, 0, 1, 0);
 }
 void Cpu::proc_xor(void) {
-	Cpu::regs.a ^= _fetchData & 0xFF;
-	setFlags(Cpu::regs.a == 0, 0, 0, 0);
+	regs.a ^= _fetchData & 0xFF;
+	setFlags(regs.a == 0, 0, 0, 0);
 }
 void Cpu::proc_or(void) {
-	Cpu::regs.a |= _fetchData & 0xFF;
-	setFlags(Cpu::regs.a == 0, 0, 0, 0);
+	regs.a |= _fetchData & 0xFF;
+	setFlags(regs.a == 0, 0, 0, 0);
 }
 void Cpu::proc_cp(void) {
-	int n = (int)Cpu::regs.a - (int)_fetchData;
+	int n = (int)regs.a - (int)_fetchData;
 	setFlags(n == 0, 1,
-		((int)Cpu::regs.a & 0x0F) - ((int)_fetchData & 0x0F) < 0, n < 0
+		((int)regs.a & 0x0F) - ((int)_fetchData & 0x0F) < 0, n < 0
 	);
 }
 void Cpu::proc_cpl(void) {
-	Cpu::regs.a = ~Cpu::regs.a;
+	regs.a = ~regs.a;
 	setFlags(-1, 1, 1, -1);
 }
 void Cpu::proc_scf(void) {
@@ -234,7 +234,7 @@ void Cpu::proc_cb(void) {
 	uint8_t op = _fetchData;
 	reg_type reg = decodeReg(op & 0b111);
 	uint8_t bit = (op >> 3) & 0b111;
-	uint8_t bit_op = (op >> 6) & 011;
+	uint8_t bit_op = (op >> 6) & 0b11;
 	uint8_t reg_val = readReg8(reg);
 
 	cycle(1);
@@ -247,7 +247,7 @@ void Cpu::proc_cb(void) {
 	case 1: //BIT
 		setFlags(!(reg_val & (1 << bit)), 0, 1, -1);
 		return;
-	case 2: //RST
+	case 2: //RES
 		reg_val &= ~(1 << bit);
 		setReg8(reg, reg_val);
 		return;
@@ -267,44 +267,44 @@ void Cpu::proc_cb(void) {
 			setC = true;
 		}
 		setReg8(reg, res);
-		setFlags(res == 0, 0, 0, setC);
+		setFlags(res == 0, false, false, setC);
 	} return;
 	case 1: { //RRC
 		uint8_t old = reg_val;
 		reg_val >>= 1;
 		reg_val |= (old << 7);
 		setReg8(reg, reg_val);
-		setFlags(!reg_val, 0, 0, old & 1);
+		setFlags(!reg_val, false, false, old & 1);
 	} return;
 	case 2: { //RL
 		uint8_t old = reg_val;
 		reg_val <<= 1;
 		reg_val |= flagC;
 		setReg8(reg, reg_val);
-		setFlags(!reg_val, 0, 0, !!(old & 0x80));
+		setFlags(!reg_val, false, false, !!(old & 0x80));
 	} return;
 	case 3: { //RR
 		uint8_t old = reg_val;
 		reg_val >>= 1;
 		reg_val |= (flagC << 7);
 		setReg8(reg, reg_val);
-		setFlags(!reg_val, 0, 0, old & 1);
+		setFlags(!reg_val, false, false, old & 1);
 	} return;
 	case 4: { //SLA
 		uint8_t old = reg_val;
 		reg_val <<= 1;
 		setReg8(reg, reg_val);
-		setFlags(!reg_val, 0, 0, !!(old & 0x80));
+		setFlags(!reg_val, false, false, !!(old & 0x80));
 	} return;
 	case 5: { //SRA
-		uint8_t u = (int8_t)reg_val >> 1;
+		uint8_t u = static_cast<int8_t>(reg_val) >> 1;
 		setReg8(reg, u);
 		setFlags(!u, 0, 0, reg_val & 1);
 	} return;
 	case 6: { //SWAP
 		reg_val = ((reg_val & 0xF0) >> 4) | ((reg_val & 0xF) << 4);
 		setReg8(reg, reg_val);
-		setFlags(reg_val == 0, 0, 0, 0);
+		setFlags(reg_val == 0, false, false, false);
 	} return;
 	case 7: { //SRL
 		uint8_t u = reg_val >> 1;
@@ -316,23 +316,23 @@ void Cpu::proc_cb(void) {
 	exit(-5);
 }
 void Cpu::proc_rlca(void) {
-	uint8_t u = Cpu::regs.a;
+	uint8_t u = regs.a;
 	bool c = (u >> 7) & 1;
 	u = (u << 1) | c;
-	Cpu::regs.a = u;
+	regs.a = u;
 	setFlags(0, 0, 0, c);
 }
 void Cpu::proc_rrca(void) {
-	uint8_t b = Cpu::regs.a & 1;
-	Cpu::regs.a >>= 1;
-	Cpu::regs.a |= (b << 7);
+	uint8_t b = regs.a & 1;
+	regs.a >>= 1;
+	regs.a |= (b << 7);
 	setFlags(0, 0, 0, b);
 }
 void Cpu::proc_rla(void) {
-	uint8_t u = Cpu::regs.a;
+	uint8_t u = regs.a;
 	uint8_t cf = CPU_FLAG_C;
 	uint8_t c = (u >> 7) & 1;
-	Cpu::regs.a = (u << 1) | cf;
+	regs.a = (u << 1) | cf;
 	setFlags(0, 0, 0, c);
 }
 void Cpu::proc_sub(void) {

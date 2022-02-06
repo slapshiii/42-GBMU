@@ -7,8 +7,8 @@ Cpu::Cpu(std::function<uint8_t(uint16_t)> rd,
 		std::function<void(uint16_t, uint8_t)> wr,
 		std::function<void(size_t)> cy
 ) : read{std::move(rd)}, write{std::move(wr)}, cycle{std::move(cy)} {
-	Cpu::regs.pc = 0x100;
-	Cpu::regs.sp = 0xFFFE;
+	regs.pc = 0x100;
+	regs.sp = 0xFFFE;
 	*((short *)&Cpu::regs.a) = 0xB001;
 	*((short *)&Cpu::regs.b) = 0x1300;
 	*((short *)&Cpu::regs.d) = 0xD800;
@@ -17,11 +17,12 @@ Cpu::Cpu(std::function<uint8_t(uint16_t)> rd,
 	this->_intFlags = 0;
 	this->_masterInt = false;
 	this->_enablingIme = false;
+	cycles = 0;
 }
 Cpu::~Cpu() {}
 
 void Cpu::fetch_instruction() {
-	this->_opcode = read(Cpu::regs.pc++);
+	this->_opcode = read(regs.pc++);
 	this->_cur_inst = instrucByOpcode(this->_opcode);
 }
 
@@ -70,22 +71,23 @@ void Cpu::execute() {
 
 static char db_msg[1024] = {0};
 static int	msg_size = 0;
+
 bool Cpu::step(){
 	if (!this->_halted) {
-		uint16_t PC = Cpu::regs.pc;
+		++cycles;
+		//printDebug();
 		this->fetch_instruction();
 		cycle(1);
 		this->fetch_data();
 
-		printDebug(PC);
-
+		//printDebug(regs.pc);
 		if (read(0xFF02) == 0x81) {
 			char c = read(0xFF01);
 			db_msg[msg_size++] = c;
 			write(0xFF02, 0);
 		}
 		if (db_msg[0]) {
-			printf("DB: %s\n", db_msg);
+			dprintf(STDERR_FILENO, "DB: %s\n", db_msg);
 		}
 
 		this->execute();
@@ -211,7 +213,7 @@ void Cpu::setReg8(reg_type reg, uint8_t value) {
 	case RT_E: regs.e = value & 0xFF; break;
 	case RT_H: regs.h = value & 0xFF; break;
 	case RT_L: regs.l = value & 0xFF; break;
-	case RT_HL: { write(readReg(RT_HL), value); };
+	case RT_HL: write(readReg(RT_HL), value); break;
 	default:	return ;
 	}
 }
@@ -234,9 +236,9 @@ uint16_t Cpu::read16(uint16_t addr) {
 	uint16_t hi = read(addr + 1);
 	return ((hi << 8) | lo);
 }
-void Cpu::write16(uint16_t addr, uint8_t value) {
-	write(addr + 1, (value >> 8) & 0xFF);
-	write(addr, value & 0xFF);
+void Cpu::write16(uint16_t addr, uint16_t value) {
+	write(addr + 1, (uint8_t)((value >> 8) & 0xFF));
+	write(addr, (uint8_t)(value & 0xFF));
 }
 
 void Cpu::stackPush(uint8_t data) {

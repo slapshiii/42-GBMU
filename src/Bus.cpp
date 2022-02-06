@@ -6,6 +6,8 @@ Bus::Bus(Rom &r, Cpu &c, Ppu &p, Timer &t) : _rom(r), _cpu(c), _ppu(p), _timer(t
 Bus::~Bus() {}
 
 void Bus::write(uint16_t addr, uint8_t data) {
+	//if (addr == 0xDD03)
+	///	dprintf(STDERR_FILENO, "cycle: %d[W] -- op:%02X\n", _cpu.cycles, _cpu._opcode);
 	if (addr < 0x8000)
 		_rom.write(addr, data);
 	else if (addr < 0xA000)	// Char/Map Data
@@ -45,6 +47,8 @@ void Bus::write(uint16_t addr, uint8_t data) {
 }
 
 uint8_t Bus::read(uint16_t addr) {
+	//if (addr == 0xDD03)
+	//	dprintf(STDERR_FILENO, "cycle: %d[R] -- op:%02X\n", _cpu.cycles, _cpu._opcode);
 	if (addr < 0x8000)		// ROM Data
 		return (this->_rom.read(addr));
 	else if (addr < 0xA000)	// Char/Map Data

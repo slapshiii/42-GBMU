@@ -500,3 +500,26 @@ void Cpu::printDebug(uint16_t PC) {
 			Cpu::regs.sp
 	);
 }
+
+void	Cpu::printDebug() {
+	dprintf(STDOUT_FILENO,
+		"A: %02X F: %02X B: %02X C: %02X "
+		"D: %02X E: %02X H: %02X L: %02X "
+		"SP: %04X PC: 00:%04X "
+		"(%02X %02X %02X %02X)\n",
+		regs.a,
+		regs.f,
+		regs.b,
+		regs.c,
+		regs.d,
+		regs.e,
+		regs.h,
+		regs.l,
+		regs.sp,
+		regs.pc,
+		read(regs.pc + 0),
+		read(regs.pc + 1),
+		read(regs.pc + 2),
+		read(regs.pc + 3)
+	);
+}

@@ -37,7 +37,7 @@ bool Rom::romLoad(const std::string &rom) {
 		std::cerr << "Error: Failed to open file: " << this->filename << std::endl;
 		return (false);
 	}
-	std::cout << "Success opening file: " << this->filename << std::endl;
+	std::cerr << "Success opening file: " << this->filename << std::endl;
 	fs.seekg(0, fs.end);
 	this->romSize = fs.tellg();
 	fs.seekg(0, fs.beg);
@@ -54,7 +54,7 @@ bool Rom::romLoad(const std::string &rom) {
 	for (uint16_t i = 0x0134; i <= 0x014C; ++i) {
 		x = x - this->romData[i] - 1;
 	}
-	printf(
+	dprintf(STDERR_FILENO,
 		"Rom Loaded:\n"
 		"\tTitle    : %s\n"
 		"\tType     : %2.2X (%s)\n"

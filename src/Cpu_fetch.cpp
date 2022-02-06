@@ -3,6 +3,8 @@
 void Cpu::fetch_data() {
 	this->_memDest = 0;
 	this->_destIsMem = false;
+	if (_cur_inst == NULL)
+		return;
 	switch (this->_cur_inst->mode)
 	{
 	case AM_IMP: return;
@@ -37,11 +39,10 @@ void Cpu::fetch_data() {
 		return;
 	case AM_R_MR: {
 		uint16_t addr = readReg(this->_cur_inst->reg2);
-		if (this->_cur_inst->reg1 == RT_C) //end page 86, start page 87
+		if (this->_cur_inst->reg2 == RT_C) //end page 86, start page 87
 			addr |= 0xFF00;
 		this->_fetchData = read(addr);
 		cycle(1);
-		setFlags(regs.a == 0, 0, 0, 0);
 	} return;
 	case AM_R_HLI:
 		this->_fetchData = read(readReg(this->_cur_inst->reg2));
