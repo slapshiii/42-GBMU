@@ -5,107 +5,16 @@
 
 #include "utils.hpp"
 
-#define CPU_FLAG_Z BIT(Cpu::regs.f, 7)
-#define CPU_FLAG_N BIT(Cpu::regs.f, 6)
-#define CPU_FLAG_H BIT(Cpu::regs.f, 5)
-#define CPU_FLAG_C BIT(Cpu::regs.f, 4)
+#define CPU_FLAG_Z BIT(regs.f, 7)
+#define CPU_FLAG_N BIT(regs.f, 6)
+#define CPU_FLAG_H BIT(regs.f, 5)
+#define CPU_FLAG_C BIT(regs.f, 4)
 
-class Cpu;
-
-typedef enum {
-	IN_NONE,
-	IN_NOP,
-	IN_LD,
-	IN_INC,
-	IN_DEC,
-	IN_RLCA,
-	IN_ADD,
-	IN_RRCA,
-	IN_STOP,
-	IN_RLA,
-	IN_JR,
-	IN_RRA,
-	IN_DAA,
-	IN_CPL,
-	IN_SCF,
-	IN_CCF,
-	IN_HALT,
-	IN_ADC,
-	IN_SUB,
-	IN_SBC,
-	IN_AND,
-	IN_XOR,
-	IN_OR,
-	IN_CP,
-	IN_POP,
-	IN_JP,
-	IN_PUSH,
-	IN_RET,
-	IN_CB,
-	IN_CALL,
-	IN_RETI,
-	IN_LDH,
-	IN_JPHL,
-	IN_DI,
-	IN_EI,
-	IN_RST,
-	IN_ERR,
-	IN_RLC,
-	IN_RRC,
-	IN_RL,
-	IN_RR,
-	IN_SLA,
-	IN_SRA,
-	IN_SWAP,
-	IN_SRL,
-	IN_BIT,
-	IN_RES,
-	IN_SET
-}	in_type;
-
-typedef enum {
-	AM_IMP,
-	AM_R_D16, AM_R_R, AM_MR_R, AM_R, AM_R_D8, AM_R_MR,
-	AM_R_HLI, AM_R_HLD, AM_HLI_R, AM_HLD_R, AM_R_A8, AM_A8_R, AM_HL_SPR,
-	AM_D16, AM_D8, AM_D16_R, AM_MR_D8, AM_MR, AM_A16_R, AM_R_A16
-}	addr_mode;
-
-typedef enum {
-	RT_NONE,
-	RT_A, RT_F, RT_B, RT_C, RT_D, RT_E, RT_H, RT_L,
-	RT_AF, RT_BC, RT_DE, RT_HL, RT_SP, RT_PC
-}	reg_type;
-
-typedef enum {
-	CT_NONE, CT_NZ, CT_Z, CT_NC, CT_C
-}	cond_type;
-
-typedef struct {
-	in_type		type;
-	addr_mode	mode = AM_IMP;
-	reg_type	reg1 = RT_NONE;
-	reg_type	reg2 = RT_NONE;
-	cond_type	cond = CT_NONE;
-	uint8_t		param = 0;
-}	instruction;
-
-typedef enum {
-	IT_VBLANK = 1,
-	IT_LCD_STAT = 2,
-	IT_TIMER = 4,
-	IT_SERIAL = 8,
-	IT_JOYPAD = 16
-}	int_type;
-
-typedef void (*IN_PROC)(Cpu *c);
-IN_PROC instGetProcessor(in_type type);
-const char *instName(in_type type);
-
-class Gbmu;
 class Cpu
 {
-
 public:
+	typedef void (Cpu::*IN_PROC)();
+	Cpu::IN_PROC instGetProcessor(in_type type);
 	typedef struct
 	{
 		uint8_t		a;
@@ -120,7 +29,7 @@ public:
 		uint16_t	sp;
 	}	cpuRegs;
 	
-	static cpuRegs	regs;
+	cpuRegs			regs;
 	uint16_t		_fetchData;
 	uint16_t		_memDest;
 	uint8_t			_opcode;
@@ -133,17 +42,23 @@ public:
 	bool			_destIsMem;
 	bool			_masterInt;
 	bool			_enablingIme;
+	uint32_t	cycles;
 
-	instruction *instrucByOpcode(uint8_t byte);
-
-	void	(*writeBus)(uint16_t addr, uint8_t value);
-	uint8_t	(*readBus)(uint16_t addr);
+private:
+	
 
 public:
-	Cpu(bool dmgMode);
+	Cpu(std::function<uint8_t(uint16_t)> read,
+		std::function<void(uint16_t, uint8_t)> write,
+		std::function<void(size_t)> cycle
+	);
 	~Cpu();
 
 	bool step();
+
+	std::function<uint8_t(uint16_t)>		read;
+	std::function<void(uint16_t, uint8_t)>	write;
+	std::function<void(size_t)>				cycle;
 
 	void fetch_instruction();
 	void fetch_data();
@@ -153,10 +68,6 @@ public:
 	void requestInt(int_type it);
 	void handleInt();
 
-	uint16_t readReg(reg_type reg);
-	void setReg(reg_type reg, uint16_t value);
-	void setFlags(int8_t z, int8_t n, int8_t h, int8_t c);
-
 	uint8_t	getIeReg();
 	void	setIeReg(uint8_t val);
 	uint8_t	getIntFlags();
@@ -164,7 +75,64 @@ public:
 	
 private:
 	void	printDebug(uint16_t PC);
+	void	printDebug(void);
 
+
+	uint16_t	read16(uint16_t addr);
+	void		write16(uint16_t addr, uint16_t value);
+	void		stackPush(uint8_t data);
+	void		stackPush16(uint16_t data);
+	uint8_t		stackPop();
+	uint16_t	stackPop16();
+
+	bool	checkCondition();
+	void	gotoAddr(uint16_t addr, bool pushpc);
+
+	uint16_t	readReg(reg_type reg);
+	void 		setReg(reg_type reg, uint16_t value);
+	uint8_t		readReg8(reg_type reg);
+	void		setReg8(reg_type reg, uint8_t value);
+	void		setFlags(int8_t z, int8_t n, int8_t h, int8_t c);
+
+	void	proc_none();
+	void	proc_nop();
+	void	proc_ld();
+	void	proc_ldh();
+	void	proc_jp();
+	void	proc_di();
+	void	proc_pop();
+	void	proc_push();
+	void	proc_jr();
+	void	proc_call();
+	void	proc_ret();
+	void	proc_rst();
+	void	proc_dec();
+	void	proc_inc();
+	void	proc_add();
+	void	proc_adc();
+	void	proc_sub();
+	void	proc_sbc();
+	void	proc_and();
+	void	proc_xor();
+	void	proc_or();
+	void	proc_cp();
+	void	proc_cb();
+	void	proc_stop();
+	void	proc_halt();
+	void	proc_rrca();
+	void	proc_rlca();
+	void	proc_rra();
+	void	proc_rla();
+	void	proc_daa();
+	void	proc_cpl();
+	void	proc_scf();
+	void	proc_ccf();
+	void	proc_ei();
+	void	proc_reti();
+
+	const char *instName(in_type type);
+	const char *rtName(reg_type type);
+	instruction *instrucByOpcode(uint8_t byte);
 };
 
 #endif

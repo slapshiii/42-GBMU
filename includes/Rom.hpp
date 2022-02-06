@@ -138,10 +138,11 @@ public:
 	Rom();
 	~Rom();
 
-	void write(uint16_t addr, uint8_t value);
+	void	write(uint16_t addr, uint8_t value);
 	uint8_t read(uint16_t addr);
 
-	bool romLoad(char *rom);
+	bool	romLoad(const std::string &rom);
+	bool	isCGB();
 	char const* romLicName() const;
 	char const* romTypeName() const;
 };

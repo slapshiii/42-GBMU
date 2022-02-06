@@ -1,9 +1,6 @@
 #include "Ppu.hpp"
-#include "Gbmu.hpp"
 
-extern Gbmu gbmu;
-
-Ppu::Ppu(){
+Ppu::Ppu(Bus &b, Cpu &c) : _cpu(c), _bus(b){
     this->_curFrame = 0;
     this->_lineTicks = 0;
     this->_videoBuf = (uint32_t *)malloc(YRES * XRES * (sizeof(32)));
@@ -22,6 +19,23 @@ Ppu::~Ppu(){
     free(this->_videoBuf);
 }
 
+uint8_t	Ppu::read(uint16_t addr) {
+	if (BETWEEN(addr, 0xA000, 0xBFFF))
+		return (readVram(addr));
+	else if (BETWEEN(addr, 0xFE00, 0xFE9F))
+		return (readOam(addr));
+	else if (BETWEEN(addr, 0xFF40, 0xFF4B))
+		return (_lcd.read(addr));
+	return 0;
+}
+void	Ppu::write(uint16_t addr, uint8_t data) {
+	if (BETWEEN(addr, 0xA000, 0xBFFF))
+		return (writeVram(addr, data));
+	else if (BETWEEN(addr, 0xFE00, 0xFE9F))
+		return (writeOam(addr, data));
+	else if (BETWEEN(addr, 0xFF40, 0xFF4B))
+		return (_lcd.write(addr, data));
+}
 void	Ppu::step() {
     ++this->_lineTicks;
     switch (this->_lcd.lcds & 0b11)
@@ -84,7 +98,7 @@ void	Ppu::mode_xfer() {
         //pipe_queueReset(); TODO
         LCDS_MODE_SET(MODE_HBLANK);
         if (LCDS_STAT_INT(SS_HBLANK)) {
-            gbmu._cpu.requestInt(IT_LCD_STAT);
+            _cpu.requestInt(IT_LCD_STAT);
         }
     }
 }
@@ -114,9 +128,9 @@ void Ppu::mode_hblank() {
 		incrementLy();
 		if (_lcd.ly >= YRES) {
 			LCDS_MODE_SET(MODE_VBLANK);
-			gbmu._cpu.requestInt(IT_VBLANK);
+			_cpu.requestInt(IT_VBLANK);
 			if (LCDS_STAT_INT(SS_VBLANK)) {
-				gbmu._cpu.requestInt(IT_LCD_STAT);
+				_cpu.requestInt(IT_LCD_STAT);
 			}
 			++_curFrame;
 			uint32_t end = get_ticks();
@@ -152,7 +166,7 @@ void Ppu::incrementLy() {
 	{
 		LCDS_LYC_SET(1);
 		if (LCDS_STAT_INT(SS_LYC)) {
-			gbmu._cpu.requestInt(IT_LCD_STAT);
+			_cpu.requestInt(IT_LCD_STAT);
 		}
 	} else {
 		LCDS_LYC_SET(0);
@@ -172,7 +186,7 @@ void Ppu::pxlFetch() {
 	case FS_TILE: {
 		_fetchedEntryCount = 0;
 		if (LCDC_BGW_ENABLE) {
-			_pxQueue.bgwFetchData[0] = gbmu.read(
+			_pxQueue.bgwFetchData[0] = _bus.read(
 				LCDC_BG_MAP_AREA
 				+ (_pxQueue.mapX / 8)
 				+ ((_pxQueue.mapY / 8) * 32)
@@ -188,7 +202,7 @@ void Ppu::pxlFetch() {
 	} break;
 	
 	case FS_DATA0: {
-		_pxQueue.bgwFetchData[1] = gbmu.read(
+		_pxQueue.bgwFetchData[1] = _bus.read(
 			LCDC_BGW_DATA_AREA
 			+ (_pxQueue.bgwFetchData[0] * 16)
 			+ _pxQueue.tileY
@@ -197,7 +211,7 @@ void Ppu::pxlFetch() {
 		_pxQueue.curFetchState = FS_DATA1;
 	} break;
 	case FS_DATA1: {
-		_pxQueue.bgwFetchData[2] = gbmu.read(
+		_pxQueue.bgwFetchData[2] = _bus.read(
 			LCDC_BGW_DATA_AREA
 			+ (_pxQueue.bgwFetchData[0] * 16)
 			+ _pxQueue.tileY + 1
@@ -281,7 +295,7 @@ void	Ppu::loadWinTile(){
 		&& _pxQueue.fetchX + 7 <_lcd.winX + YRES + 14) {
 		if (_lcd.ly >= winY && _lcd.ly < winY + XRES) {
 			uint8_t wTileY = _winLine / 8;
-			_pxQueue.bgwFetchData[0] = gbmu.read(
+			_pxQueue.bgwFetchData[0] = _bus.read(
 				LCDC_WIN_MAP_AREA
 				+ (_pxQueue.fetchX + 7 - _lcd.winX / 8)
 				+ (wTileY * 32)
@@ -315,7 +329,7 @@ void	Ppu::loadSptData(uint8_t offset) {
 		uint8_t tileIndex = _fetchedEntries[i]._tile;
 		if (spriteHeight == 16)
 			tileIndex &= ~(1);
-		_pxQueue.fetchEntryData[(i * 2) + offset] = gbmu.read(
+		_pxQueue.fetchEntryData[(i * 2) + offset] = _bus.read(
 			0x8000 + (tileIndex * 16) + ty + offset
 		);
 	}

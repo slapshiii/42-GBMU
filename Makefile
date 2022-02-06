@@ -24,11 +24,11 @@ OBJDIR = obj/
 INCL = includes/
 
 C_FILE =	Rom \
-			Ram \
 			Timer \
 			Cpu_instruc Cpu_fetch Cpu_utils Cpu \
 			Ppu \
 			Lcd \
+			Bus \
 			Gbmu \
 			main
 

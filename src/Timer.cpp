@@ -1,12 +1,10 @@
 #include "Timer.hpp"
 #include "Gbmu.hpp"
 
-extern Gbmu gbmu;
-
 Timer::Timer() { this->div = 0xABCC; }
 Timer::~Timer(){}
 
-void Timer::step() {
+bool Timer::step() {
 	uint16_t prevDiv = this->div;
 	bool update = false;
 
@@ -30,9 +28,10 @@ void Timer::step() {
 		++this->tima;
 		if (this->tima == 0xFF) {
 			this->tima = this->tma;
-			gbmu._cpu.requestInt(IT_TIMER);
+			return (true);
 		}
 	}
+	return (false);
 }
 void Timer::write(uint16_t addr, uint8_t data) {
 	switch (addr)

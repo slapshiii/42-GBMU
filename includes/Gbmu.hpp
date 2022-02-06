@@ -6,53 +6,79 @@
 #include "Ppu.hpp"
 #include "Cpu.hpp"
 #include "Rom.hpp"
-#include "Ram.hpp"
 #include "Timer.hpp"
 #include "Lcd.hpp"
+#include "Bus.hpp"
 #include "utils.hpp"
 
 class Ppu;
 class Cpu;
+class Timer;
+class Bus;
 
 class Gbmu
 {
 public:
-	typedef struct {
-		bool paused;
-		bool running;
-		uint64_t ticks;
-	}	gbmu_context;
-
-	gbmu_context	ctx;
-
-	Rom				_rom;
-	Cpu				_cpu;
-	Ram				_ram;
-	Timer			_timer;
-	Ppu				_ppu;
-	Lcd				_lcd;
-	
-	char			_serialData[2];
-
-public:
 	Gbmu();
 	~Gbmu();
 
-	void write(uint16_t addr, uint8_t value);
-	void write16(uint16_t addr, uint8_t value);
-	void writeIO(uint16_t addr, uint8_t value);
-	uint8_t read(uint16_t addr);
-	uint16_t read16(uint16_t addr);
-	uint8_t readIO(uint16_t addr);
+	//GBMU interface
+	void		run_thread();
+	void		stop();
+	void		pause();
+	void		resume();
+	void		reset();
 
-	void stackPush(uint8_t data);
-	void stackPush16(uint16_t data);
-	uint8_t		stackPop();
-	uint16_t	stackPop16();
+	void		step();
+	void		exec();
+	void		cycle(size_t n);
 
-	int	gbmu_run(int ac, char** av);
-	void cycle(int n);
-	gbmu_context* getContext();
+	bool		is_cgb();
+	uint32_t	getTicks();
+
+	uint8_t	mem_read(uint16_t addr);
+	void	mem_write(uint16_t addr, uint8_t data);
+
+	//ROM interface
+	bool	loadCartrige(const std::string &path);
+	bool	set_dmgForce(bool);
+	bool	set_cgbMode(bool);
+
+	//Debug
+	void	mem_dump(std::ostream &o, uint16_t addr, size_t len);
+	int		gbmu_runCL(int ac, char** av);
+
+private:
+
+	//save the game (progress in pokemon)
+	void 	saveGame(const std::vector<uint8_t> &sram);
+	void	run();
+
+private:
+
+	bool		_is_paused;
+	bool		_is_running;
+	bool		_cgb_mode;
+	bool		_dmg_force;
+	uint64_t	_ticks;
+
+	std::thread 			_emu_thread;
+	std::condition_variable	_pause_cv;
+	mutable	std::mutex		_mutex;
+
+	std::string _saveName;
+
+	bool	_isRomLoaded;
+	Rom		_rom;
+	Cpu		_cpu {
+		[this](uint16_t addr){ return this->mem_read(addr); },
+		[this](uint16_t addr, uint8_t data){ return this->mem_write(addr, data); },
+		[this](size_t n){ return this->cycle(n); },
+	};
+	Ppu		_ppu { _bus, _cpu };
+	Timer	_timer;
+	Bus		_bus { _rom, _cpu, _ppu, _timer };
+
 };
 
 #endif

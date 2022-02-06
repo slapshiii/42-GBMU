@@ -1,7 +1,4 @@
 #include "Cpu.hpp"
-#include "Gbmu.hpp"
-
-extern Gbmu gbmu;
 
 instruction instructions[0x100] = {
 	//0x0X
@@ -352,10 +349,10 @@ std::string instLookup[] = {
 	"SET"
 };
 
-const char *instName(in_type type) {
+const char *Cpu::instName(in_type type) {
 	return instLookup[type].c_str();
 }
-const char *rtName(reg_type type) {
+const char *Cpu::rtName(reg_type type) {
 	return rtLookup[type].c_str();
 }
 
@@ -447,7 +444,7 @@ void Cpu::printDebug(uint16_t PC) {
 	case AM_A8_R:
 		sprintf(inst, "%-4s $%02X,%s",
 			instName(_cur_inst->type),
-			gbmu.read(PC - 1),
+			read(PC - 1),
 			rtName(_cur_inst->reg2)
 		);
 		break;
@@ -486,13 +483,12 @@ void Cpu::printDebug(uint16_t PC) {
 		);
 		break;
 	}
-	printf("[%08lX]%04X:%-16s (%02X %02X %02X) A:%02X F:%s BC:%02X%02X DE:%02X%02X HL:%02X%02X SP:%04X\n",
-			gbmu.ctx.ticks,
+	printf("%04X:%-16s (%02X %02X %02X) A:%02X F:%s BC:%02X%02X DE:%02X%02X HL:%02X%02X SP:%04X\n",
 			PC,
 			inst,
 			this->_opcode,
-			gbmu.read(PC + 1),
-			gbmu.read(PC + 2),
+			read(PC + 1),
+			read(PC + 2),
 			Cpu::regs.a,
 			flags,
 			Cpu::regs.b,
@@ -502,5 +498,28 @@ void Cpu::printDebug(uint16_t PC) {
 			Cpu::regs.h,
 			Cpu::regs.l,
 			Cpu::regs.sp
+	);
+}
+
+void	Cpu::printDebug() {
+	dprintf(STDOUT_FILENO,
+		"A: %02X F: %02X B: %02X C: %02X "
+		"D: %02X E: %02X H: %02X L: %02X "
+		"SP: %04X PC: 00:%04X "
+		"(%02X %02X %02X %02X)\n",
+		regs.a,
+		regs.f,
+		regs.b,
+		regs.c,
+		regs.d,
+		regs.e,
+		regs.h,
+		regs.l,
+		regs.sp,
+		regs.pc,
+		read(regs.pc + 0),
+		read(regs.pc + 1),
+		read(regs.pc + 2),
+		read(regs.pc + 3)
 	);
 }
