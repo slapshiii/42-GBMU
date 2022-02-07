@@ -38,6 +38,10 @@ void	Gbmu::mem_dump(std::ostream &o, uint16_t addr, size_t len) {
 	}
 }
 
+void Gbmu::stop() {	_is_running = false; std::cerr << "Stop caught, exiting..." << std::endl; }
+void Gbmu::pause() { _is_paused = true; }
+void Gbmu::resume() { _is_paused = false; };
+
 int	Gbmu::gbmu_runCL(int ac, char** av)
 {
 	if (ac != 2) {
@@ -72,7 +76,7 @@ void Gbmu::cycle(size_t n) {
 				_cpu.requestInt(IT_TIMER);
 			_ppu.step();
 		}
-		//DMAstep TODO
+		_ppu.stepDma();
 	}
 }
 

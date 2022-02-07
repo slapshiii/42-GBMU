@@ -18,8 +18,11 @@ void Bus::write(uint16_t addr, uint8_t data) {
 		_wram[addr - 0xC000] = data;
 	else if (addr < 0xFE00)	// Prohibited memory
 		return;
-	else if (addr < 0xFEA0)	// OAM
+	else if (addr < 0xFEA0) {// OAM
+		if (this->_ppu.transferDma())
+			return ;
 		this->_ppu.writeOam(addr, data);
+	}
 	else if (addr < 0xFF00)	// Prohibited memory
 		return;
 	else if (addr < 0xFF80)	// IO Register
@@ -30,10 +33,12 @@ void Bus::write(uint16_t addr, uint8_t data) {
 			_io[0] = data;
 		else if (addr == 0xFF02)
 			_io[1] = data;
-		else if (BETWEEN(addr, 0xFF04, 0xFF07))
-			this->_timer.write(addr, data);
 		else if (addr == 0xFF0F)
 			this->_cpu.setIntFlags(data);
+		else if (addr == 0xFF46)
+			this->_ppu.startDma(data);
+		else if (BETWEEN(addr, 0xFF04, 0xFF07))
+			this->_timer.write(addr, data);
 		else if (BETWEEN(addr, 0xFF10, 0xFF3F)) //Sound TODO
 			return ;
 		else if (BETWEEN(addr, 0xFF40, 0xFF4B))
@@ -59,8 +64,11 @@ uint8_t Bus::read(uint16_t addr) {
 		return (_wram[addr - 0xC000]);
 	else if (addr < 0xFE00)	// Prohibited memory
 		return 0;
-	else if (addr < 0xFEA0)	// OAM
+	else if (addr < 0xFEA0) {	// OAM
+		if (this->_ppu.transferDma())
+			return 0xFF;
 		return (this->_ppu.readOam(addr));
+	}
 	else if (addr < 0xFF00)	// Prohibited memory
 		return 0;
 	else if (addr < 0xFF80)	// IO Register

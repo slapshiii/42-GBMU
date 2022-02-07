@@ -60,6 +60,14 @@ class Ppu
 {
 public:
 
+	typedef struct {
+		bool	active;
+		uint8_t	byte;
+		uint8_t	value;
+		uint8_t	delay;
+	} Dma;
+
+	Dma		_dma;
 	oam_obj	_oamRam[40];
 	uint8_t	_vram[0x2000];
 
@@ -92,7 +100,12 @@ public:
 	Ppu(Bus &b, Cpu &c);
 	~Ppu();
 
+	void	reset();
 	void	step();
+
+	void	startDma(uint8_t start);
+	void	stepDma();
+	bool	transferDma();
 
 	uint8_t	read(uint16_t addr);
 	void	write(uint16_t addr, uint8_t data);
@@ -114,6 +127,7 @@ public:
 	void	loadSptData(uint8_t offset);
 
 private:
+
 	bool isWinvisible();
 	bool queueAdd();
 	void pxlProcess();

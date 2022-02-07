@@ -68,10 +68,10 @@ void Cpu::execute() {
 	if (proc)
 		(this->*proc)();
 }
-
+/*
 static char db_msg[1024] = {0};
 static int	msg_size = 0;
-
+*/
 bool Cpu::step(){
 	if (!this->_halted) {
 		++cycles;
@@ -80,8 +80,8 @@ bool Cpu::step(){
 		cycle(1);
 		this->fetch_data();
 
-		//printDebug(regs.pc);
-		if (read(0xFF02) == 0x81) {
+		printDebug(regs.pc);
+/*		if (read(0xFF02) == 0x81) {
 			char c = read(0xFF01);
 			db_msg[msg_size++] = c;
 			write(0xFF02, 0);
@@ -89,7 +89,7 @@ bool Cpu::step(){
 		if (db_msg[0]) {
 			dprintf(STDERR_FILENO, "DB: %s\n", db_msg);
 		}
-
+*/
 		this->execute();
 	} else {
 		cycle(1);

@@ -1,22 +1,24 @@
 #include "Ppu.hpp"
 
 Ppu::Ppu(Bus &b, Cpu &c) : _cpu(c), _bus(b){
-    this->_curFrame = 0;
-    this->_lineTicks = 0;
     this->_videoBuf = (uint32_t *)malloc(YRES * XRES * (sizeof(32)));
+}
+Ppu::~Ppu(){
+    free(this->_videoBuf);
+}
 
-    this->_pxQueue.lineX = 0;
+void	Ppu::reset() {
+	this->_curFrame = 0;
+    this->_lineTicks = 0;
+	this->_pxQueue.lineX = 0;
     this->_pxQueue.pushedX = 0;
     this->_pxQueue.fetchX = 0;
     this->_pxQueue.curFetchState = FS_TILE;
-
+	//this->_videoBuf;
     this->_lineSprites = 0;
     this->_fetchedEntryCount = 0;
     this->_winLine = 0;
     LCDS_MODE_SET(MODE_OAM);
-}
-Ppu::~Ppu(){
-    free(this->_videoBuf);
 }
 
 uint8_t	Ppu::read(uint16_t addr) {
@@ -333,4 +335,25 @@ void	Ppu::loadSptData(uint8_t offset) {
 			0x8000 + (tileIndex * 16) + ty + offset
 		);
 	}
+}
+
+void	Ppu::startDma(uint8_t start) {
+	_dma.active = true;
+	_dma.byte = 0;
+	_dma.value = start;
+	_dma.delay = 2;
+}
+void	Ppu::stepDma() {
+	if (_dma.active)
+		return ;
+	if (_dma.delay) {
+		--_dma.delay;
+		return ;
+	}
+	writeOam(_dma.byte, _bus.read((_dma.value * 0x100) + _dma.byte));
+	_dma.byte++;
+	_dma.active = _dma.byte < 0xA0;
+}
+bool	Ppu::transferDma() {
+	return _dma.active;
 }

@@ -15,7 +15,7 @@ NAME := gbmu
 CC := clang++
 
 CFLAGS += -Wall -Werror -Wextra
-CFLAGS += -g
+#CFLAGS += -g
 #CFLAGS += -fsanitize=address
 #CFLAGS += -O2
 
