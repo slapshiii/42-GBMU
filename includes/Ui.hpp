@@ -5,6 +5,6 @@
 
 #include "Gbmu.hpp"
 
-void	checkEvent(sf::Event e, sf::RenderWindow &win, sf::RenderWindow &dbg);
-
+void	checkEvent(sf::Event e);
+void	update_dbgWin();
 #endif
