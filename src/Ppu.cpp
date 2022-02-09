@@ -1,10 +1,8 @@
 #include "Ppu.hpp"
 
 Ppu::Ppu(Bus &b, Cpu &c) : _cpu(c), _bus(b){
-    this->_videoBuf = (uint32_t *)malloc(YRES * XRES * (sizeof(32)));
 }
 Ppu::~Ppu(){
-    free(this->_videoBuf);
 }
 
 void	Ppu::reset() {
@@ -14,7 +12,7 @@ void	Ppu::reset() {
     this->_pxQueue.pushedX = 0;
     this->_pxQueue.fetchX = 0;
     this->_pxQueue.curFetchState = FS_TILE;
-	//this->_videoBuf;
+	this->_videoBuf.fill(0);
     this->_lineSprites = 0;
     this->_fetchedEntryCount = 0;
     this->_winLine = 0;

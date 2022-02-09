@@ -1,4 +1,5 @@
 .vscode/
+gtk-build/
 gbmu
 
 *.txt

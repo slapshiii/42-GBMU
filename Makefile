@@ -13,10 +13,11 @@
 NAME := gbmu
 
 CC := clang++
+GTKLIB := gtk-build/
 
 CFLAGS += -Wall -Werror -Wextra
 #CFLAGS += -g
-#CFLAGS += -fsanitize=address
+CFLAGS += -fsanitize=address
 #CFLAGS += -O2
 
 SRCDIR = src/
@@ -30,6 +31,7 @@ C_FILE =	Rom \
 			Lcd \
 			Bus \
 			Gbmu \
+			Ui \
 			main
 
 SRC = $(addprefix $(SRCDIR), $(addsuffix .cpp, $(C_FILE)))
@@ -38,7 +40,7 @@ OBJ = $(addprefix $(OBJDIR), $(addsuffix .o, $(C_FILE)))
 all: $(NAME)
 
 $(NAME): $(OBJ)
-	$(CC) $(CFLAGS) $(OBJ) -o $(NAME)
+	$(CC) $(CFLAGS) $(OBJ) -o $(NAME) -lsfml-graphics -lsfml-window -lsfml-system
 
 $(OBJDIR)%.o: $(SRCDIR)%.cpp $(INCL)/*
 	@mkdir -p $(OBJDIR)

@@ -2,6 +2,7 @@
 #define _PPU_HPP
 
 #include <list>
+#include <array>
 
 #include "utils.hpp"
 #include "Cpu.hpp"
@@ -81,9 +82,9 @@ public:
 	oam_obj	_fetchedEntries[3];
 	uint8_t	_winLine;
 
-	uint32_t	_curFrame;
-	uint32_t	_lineTicks;
-	uint32_t	*_videoBuf;
+	uint32_t		_curFrame;
+	uint32_t		_lineTicks;
+	std::array<uint32_t, YRES * XRES>	_videoBuf;
 
 	Lcd	_lcd;
 

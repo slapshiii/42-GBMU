@@ -1,17 +1,71 @@
 #include "Gbmu.hpp"
 
 Gbmu::Gbmu(){
-	_is_paused = false;
-	_is_running = true;
 }
 Gbmu::~Gbmu(){}
 
-void Gbmu::mem_write(uint16_t addr, uint8_t data) {
-	_bus.write(addr, data);
+void Gbmu::mem_write(uint16_t addr, uint8_t data) {	_bus.write(addr, data); }
+uint8_t Gbmu::mem_read(uint16_t addr) {	return _bus.read(addr); }
+
+void Gbmu::stop() {
+	_is_running = false;
+	std::cerr << "Stop caught, exiting..." << std::endl;
+	if (_emu_thread.joinable())
+		_emu_thread.join();
+}
+void Gbmu::pause() { _is_paused = true; }
+void Gbmu::resume() { _is_paused = false; };
+
+void Gbmu::run_thread() {
+	_is_paused = false;
+	_is_running = true;
+	_cgb_mode = _rom.isCGB();
+	while (_is_running)
+	{
+		if (_is_paused) {
+			usleep(10);
+			continue;
+		}
+		if (!_cpu.step()) {
+			std::cerr << "Error: CPU stopped" << std::endl;
+			_is_running = false;
+		}
+	}
 }
 
-uint8_t Gbmu::mem_read(uint16_t addr) {
-	return _bus.read(addr);
+int	Gbmu::gbmu_runCL(int ac, char** av)
+{
+	if (ac != 2) {
+		std::cerr << "Invalid argument: Usage: gbmu <rom file>" << std::endl;
+		return (-1);
+	}
+	loadCartrige(av[1]);
+	stop();
+	auto routine = [this]{ this->run_thread(); };
+	_emu_thread = std::thread(routine);
+	return (0);
+}
+
+void Gbmu::cycle(size_t n) {
+	for (size_t i = 0; i < n; ++i) {
+		for (size_t j = 0; j < 4; ++j) {
+			++_ticks;
+			if (_timer.step())
+				_cpu.requestInt(IT_TIMER);
+			_ppu.step();
+		}
+		_ppu.stepDma();
+	}
+}
+
+bool	Gbmu::loadCartrige(const std::string &path) {
+	_isRomLoaded = _rom.romLoad(path.c_str());
+	if (!_isRomLoaded) {
+		std::cerr << "Error: Failed to load ROM: " << path << std::endl;
+		return (-2);
+	}
+	std::cerr << "ROM loaded... : " << path << std::endl;
+	return _isRomLoaded;
 }
 
 void	Gbmu::mem_dump(std::ostream &o, uint16_t addr, size_t len) {
@@ -38,49 +92,4 @@ void	Gbmu::mem_dump(std::ostream &o, uint16_t addr, size_t len) {
 	}
 }
 
-void Gbmu::stop() {	_is_running = false; std::cerr << "Stop caught, exiting..." << std::endl; }
-void Gbmu::pause() { _is_paused = true; }
-void Gbmu::resume() { _is_paused = false; };
-
-int	Gbmu::gbmu_runCL(int ac, char** av)
-{
-	if (ac != 2) {
-		std::cerr << "Invalid argument: Usage: gbmu <rom file>" << std::endl;
-		return (-1);
-	}
-	if (!this->_rom.romLoad(av[1])) {
-		std::cerr << "Error: Failed to load ROM: " << av[1] << std::endl;
-		return (-2);
-	}
-	std::cerr << "ROM loaded... : " << av[1] << std::endl;
-	_cgb_mode = _rom.isCGB();
-	while (this->_is_running)
-	{
-		if (this->_is_paused) {
-			sleep(1);
-			continue;
-		}
-		if (!this->_cpu.step()) {
-			std::cerr << "Error: CPU stopped" << std::endl;
-			return (-3);
-		}
-	}
-	return (0);
-}
-
-void Gbmu::cycle(size_t n) {
-	for (size_t i = 0; i < n; ++i) {
-		for (size_t j = 0; j < 4; ++j) {
-			++_ticks;
-			if (_timer.step())
-				_cpu.requestInt(IT_TIMER);
-			_ppu.step();
-		}
-		_ppu.stepDma();
-	}
-}
-
-bool	Gbmu::loadCartrige(const std::string &path) {
-	_isRomLoaded = _rom.romLoad(path.c_str());
-	return _isRomLoaded;
-}
+uint32_t	Gbmu::getTicks() { return this->_ticks; }

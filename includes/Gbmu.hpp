@@ -56,8 +56,8 @@ private:
 
 private:
 
-	bool		_is_paused;
-	bool		_is_running;
+	std::atomic<bool>		_is_paused;
+	std::atomic<bool>		_is_running;
 	bool		_cgb_mode;
 	bool		_dmg_force;
 	uint64_t	_ticks;
